@@ -25,6 +25,7 @@ ArgumentV
 associativity
 async
 atomics
+AtomicI
 attr
 autocompletion
 AveragedCollection
