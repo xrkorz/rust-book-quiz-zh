@@ -1,0 +1,46 @@
+[[questions]]
+id = "bba8893d-f59f-492a-b639-ea04a5c8093b"
+type = "Tracing"
+prompt.program = """
+struct Point {
+  x: i32,
+  y: i32,
+}
+
+fn main() {
+  let mut a = Point { x: 1, y: 2 };
+  a.x += 1;
+  let b = Point { y: 1, ..a };
+  a.x += 1;
+  println!("{}", b.x);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "2"
+context = """
+`..a` 语法将 `a` 的每个字段（除 `y` 外）复制到 `b` 中，因此第二次 `a.x += 1` 对 `b` 没有影响。
+"""
+
+[[questions]]
+id = "77ef68d6-ee7f-4642-8817-73b846c46b2b"
+type = "Tracing"
+prompt.program = """
+struct Point {
+  x: i32,
+  y: i32,
+}
+
+fn main() {
+  let mut p = Point { x: 1, y: 2 };
+  let x = &mut p.x;
+  let y = &mut p.y;
+  *x += 1;
+  *y += 1;
+  println!("{} {}", p.x, p.y);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "2 3"
+context = """
+Rust 知道 `.x` 和 `.y` 指向不同的对象，因此同时对两个字段取可变引用是合法的。
+"""

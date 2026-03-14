@@ -1,0 +1,380 @@
+[[questions]]
+id = "9ff33b87-38e2-471b-8ca4-9c31a6431376"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// Returns the n-th largest element in a slice
+fn find_nth<T: Ord + Clone>(elems: &[T], n: usize) -> T {
+    elems.sort();
+    let t = &elems[n];
+    return t.clone();
+}
+```
+
+如果你尝试编译此程序，以下哪项最准确地描述了你会遇到的编译错误？
+"""
+answer.answer = "cannot borrow `elems` as mutable for `sort`"
+prompt.distractors = [
+  "cannot move out of shared reference for `clone`",
+  "cannot move out of shared reference in expression `&elems[n]`",
+  "the lifetime of `T` must outlive `&[T]`",
+]
+context = """
+`slice::sort` 方法需要对切片的可变引用，
+但这里传入的是不可变引用。
+"""
+
+
+[[questions]]
+id = "3ee8d846-d282-4de1-8e83-5ca0bc44fc13"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// Returns the n-th largest element in a slice
+fn find_nth<T: Ord + Clone>(elems: &[T], n: usize) -> T {
+    elems.sort();
+    let t = &elems[n];
+    return t.clone();
+}
+```
+
+通常情况下，尝试编译此函数时，编译器会返回如下错误：
+
+```text
+error[E0596]: cannot borrow `*elems` as mutable, as it is behind a `&` reference
+ --> test.rs:3:5
+  |
+3 |     elems.sort();
+  |     ^^^^^^^^^^^^ `elems` is a `&` reference, so the data it refers to cannot be borrowed as mutable
+```
+
+假设编译器没有拒绝此函数，以下哪些程序（如果有的话）会
+（1）通过编译器，且（2）在执行时可能引发未定义行为？
+请勾选满足两个条件的程序，如果没有则勾选"以下程序均不满足"。
+"""
+answer.answer = ["以下程序均不满足"]
+prompt.distractors = [
+"""
+```
+let v = vec![5, 4, 3, 2, 1];
+find_nth(&v, 10);
+```
+""",
+"""
+```
+let v = vec![5, 4, 3, 2, 1];
+find_nth(&v, 0);
+println!("{}", v[0]);
+```
+""",
+"""
+```
+let v = vec![5, 4, 3, 2, 1];
+let n = &v[0];
+find_nth(&v, 0);
+println!("{}", n);
+```
+""",
+]
+context = """
+此程序在技术上是内存安全的，因为 `slice::sort` 只能移动元素，而不能释放它们。例如，即使调用 `find_nth` 后 `&v[0]` 指向的不是*原来的*数字，
+也能保证指向*某个*数字。
+
+注意 `find_nth(&v, 10)` 不会导致未定义行为，因为 Rust 会对数组访问进行边界检查，所以 `&v[10]` 会触发 panic。
+"""
+
+
+[[questions]]
+id = "d070eb9e-4527-453a-8c9b-698739a3dd6a"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// Returns the n-th largest element in a slice
+fn find_nth<T: Ord + Clone>(elems: &[T], n: usize) -> T {
+    elems.sort();
+    let t = &elems[n];
+    return t.clone();
+}
+```
+
+以下修复方案（黄色高亮部分）中，哪个最符合以下三个标准：
+1. 修复后的函数能通过 Rust 编译器，
+2. 修复后的函数保留了原代码的意图，且
+3. 修复后的函数不引入不必要的低效
+"""
+answer.answer = """
+```ide
+fn find_nth<T: Ord + Clone>(elems: &[T], n: usize) -> T {
+    `[let mut elem_refs: Vec<&T> = elems.iter().collect();]`
+    `[elem_refs.sort();]`
+    let t = `[elem_refs[n]]`;
+    return t.clone();
+}
+```
+"""
+prompt.distractors = [
+"""
+```ide
+fn find_nth<T: Ord + Clone>(`[elems: &mut [T]]`, n: usize) -> T {
+    elems.sort();
+    let t = &elems[n];
+    return t.clone();
+}
+```
+""",
+"""
+```ide
+fn find_nth<T: Ord + Clone>(elems: &[T], n: usize) -> T {
+    `[let mut elems = elems.to_vec();]`
+    elems.sort();
+    let t = &elems[n];
+    return t.clone();
+}
+```
+""",
+"""
+```ide
+fn find_nth<`[T: Ord]`>(`[mut elems: Vec<T>]`, n: usize) -> T {
+    elems.sort();
+    let t = `[elems.remove(n)]`;
+    return `[t]`;
+}
+```
+""",
+]
+context = """
+`find_nth` 这类函数显然旨在作为只读函数，即提取输入序列的某个属性。任何修改或丢弃输入的方案都不符合原函数的意图，
+即使它比创建辅助向量更高效。
+
+创建 `Vec<&T>` 比创建 `Vec<T>` 更优，因为如果 `T` 较大，`elems.to_vec()` 的开销会很高。但如果我们知道 `T: Copy`，
+那么 `to_vec` 相比于减少 `elems.sort()` 中的指针解引用次数会更优。
+"""
+
+[[questions]]
+id = "95979d75-5823-4059-a1cf-7e0eba69b41a"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+struct TestResult {
+    /// Student's scores on a test
+    scores: Vec<usize>,
+
+    /// A possible value to curve all scores
+    curve: Option<usize>
+}
+impl TestResult {
+    pub fn get_curve(&self) -> &Option<usize> {
+        &self.curve
+    }
+
+    /// If there is a curve, then increments all
+    /// scores by the curve
+    pub fn apply_curve(&mut self) {
+        if let Some(curve) = self.get_curve() {
+            for score in self.scores.iter_mut() {
+                *score += *curve;
+            }
+        }
+    }
+}
+```
+
+如果你尝试编译此程序，以下哪项最准确地描述了你会遇到的编译错误？
+"""
+answer.answer = "in `apply_curve`, cannot borrow `self.scores` as mutable for `iter_mut`"
+prompt.distractors = [
+  "in `get_curve`, cannot return a reference to a local variable `self.curve`",
+  "in `apply_curve`, cannot borrow `self` as immutable for `get_curve`",
+  "in `apply_curve`, `*score` cannot be mutated"
+]
+context = """
+由于生命周期省略，函数 `get_curve` 的类型签名为 `get_curve<'a>(&'a self) -> &'a Option<usize>`。
+这意味着调用 `self.get_curve()` 会延长对整个 `self` 的借用，而不仅仅是 `self.curve`。
+因此在 `let Some(curve) = ...` 的作用域内，`self` 已被不可变借用，无法调用 `self.scores.iter_mut()`。
+"""
+
+
+[[questions]]
+id = "dcb42a15-d9b7-437d-95ec-f000b64ce277"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+struct TestResult {
+    /// Student's scores on a test
+    scores: Vec<usize>,
+
+    /// A possible value to curve all scores
+    curve: Option<usize>
+}
+impl TestResult {
+    pub fn get_curve(&self) -> &Option<usize> {
+        &self.curve
+    }
+
+    /// If there is a curve, then increments all
+    /// scores by the curve
+    pub fn apply_curve(&mut self) {
+        if let Some(curve) = self.get_curve() {
+            for score in self.scores.iter_mut() {
+                *score += *curve;
+            }
+        }
+    }
+}
+```
+
+通常情况下，尝试编译此函数时，编译器会返回如下错误：
+
+```text
+error[E0502]: cannot borrow `self.scores` as mutable because it is also borrowed as immutable
+  --> test.rs:17:26
+   |
+16 |         if let Some(curve) = self.get_curve() {
+   |                              ---------------- immutable borrow occurs here
+17 |             for score in self.scores.iter_mut() {
+   |                          ^^^^^^^^^^^^^^^^^^^^^^ mutable borrow occurs here
+18 |                 *score += *curve;
+   |                           ------ immutable borrow later used here
+```
+
+假设编译器没有拒绝此函数，以下哪些程序（如果有的话）会
+（1）通过编译器，且（2）在执行时可能引发未定义行为？
+请勾选满足两个条件的程序，如果没有则勾选"以下程序均不满足"。
+"""
+answer.answer = ["以下程序均不满足"]
+prompt.distractors = [
+"""
+```
+let mut result = TestResult {
+    scores: vec![20, 50, 30],
+    curve: Some(10)
+};
+result.apply_curve();
+```
+""",
+"""
+```
+let mut result = TestResult {
+    scores: vec![20, 50, 30],
+    curve: Some(10)
+};
+let x = &result.scores[0];
+result.apply_curve();
+println!("{}", x);
+```
+""",
+"""
+```
+let mut result = TestResult {
+    scores: vec![20, 50, 30],
+    curve: Some(10)
+};
+result.apply_curve();
+println!("{:?}", result.scores);
+```
+""",
+]
+context = """
+该程序实际上是安全的。借用检查器无法理解 `get_curve` 只借用了 `curve` 而不影响 `scores`，这是其局限性。
+但理论上，如果 `get_curve` 被修改为返回与 `self.scores` 相关的引用，内存安全可能会被破坏。
+"""
+
+[[questions]]
+id = "aa93c497-9864-4799-b69b-7de42c158f2a"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+struct TestResult {
+    /// Student's scores on a test
+    scores: Vec<usize>,
+
+    /// A possible value to curve all scores
+    curve: Option<usize>
+}
+impl TestResult {
+    pub fn get_curve(&self) -> &Option<usize> {
+        &self.curve
+    }
+
+    /// If there is a curve, then increments all
+    /// scores by the curve
+    pub fn apply_curve(&mut self) {
+        if let Some(curve) = self.get_curve() {
+            for score in self.scores.iter_mut() {
+                *score += *curve;
+            }
+        }
+    }
+}
+```
+
+以下修复方案（黄色高亮部分）中，哪个最符合以下三个标准：
+1. 修复后的函数能通过 Rust 编译器，
+2. 修复后的函数保留了原代码的意图，且
+3. 修复后的函数不引入不必要的低效
+"""
+answer.answer = """
+```ide
+pub fn apply_curve(&mut self) {
+    if let Some(curve) = `[self.curve]` {
+        for score in self.scores.iter_mut() {
+            *score += curve;
+        }
+    }
+}
+```
+"""
+prompt.distractors = [
+"""
+```ide
+pub fn apply_curve(&mut self) {
+    if let Some(curve) = self.get_curve()`[.as_ref()]` {
+        for score in self.scores.iter_mut() {
+            *score += *curve;
+        }
+    }
+}
+```
+""",
+"""
+```ide
+pub fn apply_curve(&mut self) {
+    if let Some(curve) = self.get_curve() {
+        for score in self.scores`[.clone()]`.iter_mut() {
+            *score += *curve;
+        }
+    }
+}
+```
+""",
+"""
+```ide
+pub fn apply_curve(&mut self) {
+    if let Some(curve) = self.get_curve() {
+        for score in self.scores`[.iter()]` {
+            *score += *curve;
+        }
+    }
+}
+```
+""",
+]
+context = """
+通过将 `get_curve` 的定义内联到 `apply_curve` 中，借用检查器能够理解 `self.curve` 不是 `self.scores`，
+从而允许函数编译通过。这是解决此类借用检查器局限性的常见变通方法。
+
+另一种选择是利用 `self.curve` 复制开销极低的特性，使用 [`Option::copied`](https://doc.rust-lang.org/std/option/enum.Option.html#method.copied)，
+这样在调用 `.copied()` 后会立即释放对 `self` 的借用。
+"""

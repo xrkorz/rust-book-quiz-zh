@@ -1,0 +1,55 @@
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = "如果你想在非异步代码中等待一个 future，应该怎么做？"
+prompt.distractors = [
+  "在 future 后面直接加 `.await`",
+  "将 future 交给 Rust 内置的异步运行时",
+  "将 future 包裹在一个 `async` 块中，然后对该块使用 `.await`",
+]
+answer.answer = "将 future 交给第三方异步运行时"
+context = """
+Rust 不允许在 `async` 块或函数之外使用 `.await`。Rust 也没有内置的异步运行时。
+你应该使用像 `tokio` 或 `trpl` 这样的第三方异步运行时。
+"""
+id = "de2a5023-dd5c-412e-8425-c8ed638f18f0"
+
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+下面的异步函数会脱糖为哪种类型签名？
+
+```rust
+async fn calculate(nums: &[i32]) -> i32 {
+  /* ... */
+}
+```
+"""
+prompt.distractors = [
+  """
+```rust
+fn calculate<'a>(nums: &'a [i32], output: &mut impl Future<Output = i32> + 'a);
+```
+  """,
+  """
+```rust
+fn calculate(nums: &'_ [i32]) -> i32 as Future;
+```
+  """,
+  """
+```rust
+fn calculate() -> impl for<'a> Future<Input = &'a [i32], Output = i32> + 'a;
+```
+  """
+]
+answer.answer = """
+```rust
+fn calculate<'a>(nums: &'a [i32]) -> impl Future<Output = i32> + 'a;
+```
+"""
+context = """
+async 函数会返回一个实现了 `Future` trait 的匿名类型，其输出类型就是函数的返回类型。
+因此这里表示为 `impl Future<Output = i32>`。该 future 会捕获函数参数中的所有生命周期。
+所以返回类型带有 `+ 'a` 约束，输入切片的类型为 `&'a [i32]`。这表明切片的存活时间
+至少要和捕获它的 future 一样长。
+"""
+id = "9c000322-464b-4d34-9e30-55591f9283d2"

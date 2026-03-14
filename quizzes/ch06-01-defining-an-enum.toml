@@ -1,0 +1,53 @@
+[[questions]]
+id = "770f09d3-110d-4505-b41a-2af422198d59"
+type = "Tracing"
+prompt.program = """
+fn foo(x: &i32) {
+  println!("{x}");
+}
+
+fn main() {
+  let x = null;
+  foo(x);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 6
+context = """
+Rust 没有空指针，因此 `null` 关键字不存在。应使用 Option 类型来表示一个对象可能为空的情况。
+"""
+
+[[questions]]
+id = "6226be11-31c3-4cac-b97c-515514a70af2"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下两种 `Result` 类型的表示方式：当计算成功时包含值 `T`，失败时包含错误 `E`。
+
+```
+struct Result1<T, E> {
+  ok: Option<T>,
+  err: Option<E>,
+}
+
+enum Result2<T, E> {
+  Ok(T),
+  Err(E)
+}
+```
+
+在 Rust 中，枚举 `Result2` 被认为比结构体 `Result1` 更符合惯用法。
+以下哪个说法**不是**有效的原因？
+"""
+answer.answer = "结构体包含 `Option` 类型，而 `Option` 只应用于包装结构体"
+prompt.distractors = [
+  "结构体在运行时比枚举占用更多内存空间",
+  "结构体的 `ok` 和 `err` 可以同时为 `None`，而枚举至少必须有其中一个",
+  "结构体在构造时比枚举语法上更繁琐"
+]
+context = """
+结构体的字段中包含 `Option` 类型是完全合法的（题目问的是哪个**不是**有效的原因）。
+但如果你的数据结构有不变量，例如"两个可选字段中恰好有一个应为 `Some`"，
+那么用枚举来保证这一不变量更为合适。
+"""
+
+

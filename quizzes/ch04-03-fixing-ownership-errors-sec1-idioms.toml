@@ -1,0 +1,153 @@
+[[questions]]
+id = "8c9f9173-c5ba-4914-9cfa-e3432f8414e1"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪项不是解决"从函数返回栈引用"问题的有效修复方式？
+"""
+answer.answer = "延长栈帧的生命周期"
+prompt.distractors = ["使用引用计数指针", "获取返回值的所有权", "从调用方接收一个可变槽位"]
+context = """
+栈帧的生命周期无法延长，因此这不是有效的解决方案。
+"""
+
+[[questions]]
+id = "e6bc84ef-069c-4d1d-99ec-69b13492569c"
+type = "MultipleChoice"
+prompt.prompt = """
+假设一位程序员尝试编写以下函数：
+
+```
+/// Returns a person's name with "Ph.D." added as a title
+fn award_phd(name: &String) -> String {
+    let mut name = *name;
+    name.push_str(", Ph.D.");
+    name
+}
+```
+
+Rust 编译器以如下错误拒绝了他们的代码：
+
+```text
+error[E0507]: cannot move out of `*name` which is behind a shared reference
+ --> test.rs:3:20
+  |
+3 |     let mut name = *name;
+  |                    ^^^^^
+  |                    |
+  |                    move occurs because `*name` has type `String`, which does not implement the `Copy` trait
+  |                    help: consider borrowing here: `&*name`
+```
+
+根据该函数的既定用途，下列哪项是最符合 Rust 惯例的修复方案？与上面函数的不同之处已高亮显示。
+"""
+answer.answer = """
+```
+fn award_phd(name: &String) -> String {
+    let mut name = `[name.clone()]`;
+    name.push_str(", Ph.D.");
+    name
+}
+```
+"""
+prompt.distractors = [
+"""
+```
+fn award_phd(name: &String) -> String {
+    let mut name = `[&*name]`;
+    name.push_str(", Ph.D.");
+    name
+}
+```
+""",
+"""
+```
+fn award_phd(`[mut name: String]`) -> String {
+    name.push_str(", Ph.D.");
+    name
+}
+```
+""",
+"""
+```
+fn award_phd(`[name: &mut String]`) {
+    name.push_str(", Ph.D.");
+}
+```
+"""
+]
+context = """
+该函数并不打算修改调用方传入的原始名字，因此将 `name` 的类型改为 `&mut String` 或 `String` 都是不恰当的。编译器建议的 `&*name` 也不够用——正确的解决方案是通过 `name.clone()` 克隆数据，并对本地副本进行修改。
+"""
+
+[[questions]]
+id = "8020e4a2-f0b4-4eae-90ac-a87712d9d00b"
+type = "MultipleChoice"
+prompt.prompt = """
+假设一位程序员尝试编写以下函数：
+
+```
+/// Rounds all the floats in a vector to the nearest integer, in-place
+fn round_in_place(v: &Vec<f32>) {
+    for n in v {
+        *n = n.round();
+    }
+}
+```
+
+Rust 编译器以如下错误拒绝了他们的代码：
+
+```text
+error[E0594]: cannot assign to `*n`, which is behind a `&` reference
+ --> test.rs:4:9
+  |
+3 |     for n in v {
+  |              - this iterator yields `&` references
+4 |         *n = n.round();
+  |         ^^^^^^^^^^^^^^ `n` is a `&` reference, so the data it refers to cannot be written
+```
+
+根据该函数的既定用途，下列哪项是最符合 Rust 惯例的修复方案？与上面函数的不同之处已高亮显示。
+"""
+answer.answer = """
+```
+fn round_in_place(v: `[&mut Vec<f32>]`) {
+    for n in v {
+        *n = n.round();
+    }
+}
+```
+"""
+prompt.distractors = [
+"""
+```
+fn round_in_place(v: &Vec<f32>) `[-> Vec<f32>]` {
+    `[let mut v2 = Vec::new();]`
+    for n in v {
+        `[v2.push(n.round());]`
+    }
+    `[v2]`
+}
+```
+""",
+"""
+```
+fn round_in_place(`[mut v: Vec<f32>]`) {
+    for n in v {
+        *n = n.round();
+    }
+}
+```
+""",
+"""
+```
+fn round_in_place(v: &Vec<f32>) {
+    for `[mut n]` in `[&mut v.clone()]` {
+        n = n.round();
+    }
+}
+```
+""",
+]
+context = """
+由于该函数应当原地对向量进行舍入，返回一个新副本（`-> Vec<f32>`）或获取向量的所有权（`mut v: Vec<f32>`）都不符合惯例。最佳方案是将类型签名从 `&Vec<f32>` 改为 `&mut Vec<f32>`。
+"""

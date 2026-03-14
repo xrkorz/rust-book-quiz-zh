@@ -1,0 +1,64 @@
+[[questions]]
+id = "7a7bb518-b06e-4756-9510-6a8d0d1c84fa"
+type = "ShortAnswer"
+prompt.prompt = "你需要在函数上添加什么注解来表明它是一个单元测试？"
+answer.answer = "#[test]"
+context = """
+这会告知 cargo 测试框架将该函数视为测试，而非库代码。
+"""
+
+[[questions]]
+id = "cd77485f-723a-4978-8da6-c4ca3df44c44"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你有一个类型签名如下的函数：
+
+```
+fn f(x: usize) -> Result<usize, String>;
+```
+
+你想测试 `f(0)` 应该返回 `Err(_)`。
+以下哪项**不是**有效的测试方式？
+"""
+answer.answer = """
+```
+#[test]
+#[should_err]
+fn test() -> Result<usize, String> {
+  f(0)
+}
+```
+  """
+prompt.distractors = [
+  """
+```
+#[test]
+fn test() {
+  assert!(f(0).is_err());
+}
+```
+  """,
+  """
+```
+#[test]
+#[should_panic]
+fn test() {
+  f(0).unwrap();
+}
+```
+  """,
+  """
+```
+#[test]
+fn test() {
+  assert!(match f(0) {
+    Ok(_) => false,
+    Err(_) => true
+  });
+}
+```
+  """
+]
+context = """
+`should_err` 在 Rust 中并不存在 &mdash; 任何返回 `Result` 的测试必须返回 `Ok` 才能通过。
+"""

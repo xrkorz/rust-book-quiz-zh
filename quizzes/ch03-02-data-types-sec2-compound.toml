@@ -1,0 +1,33 @@
+[[questions]]
+id = "30212501-00d5-4ef6-838f-3df5112ee7ed"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let message = "The temperature today is:";
+  let x = [message, 100];
+  println!("{} {}", x[0], x[1]);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 3
+context = """
+数组只能包含同一类型的元素。语法 `[message, 100]` 创建了一个包含两个元素的数组。
+变量 `message` 是字符串，而常量 `100` 是数字。
+"""
+
+[[questions]]
+id = "4e632a23-24cc-4c29-8935-cf6b62c3764b"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let t = ([1; 2], [3; 4]);
+  let (a, b) = t;
+  println!("{}", a[0] + t.1[0]);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "4"
+context = """
+语法 `[x; y]` 声明一个包含 `y` 个值 `x` 的数组。语法 `(a, b)` 对 `t` 进行解构，将 `a` 绑定到 `[1; 2]`。
+语法 `t.1` 引用 `t` 的第二个元素，即 `[3; 4]`。
+"""

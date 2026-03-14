@@ -1,0 +1,35 @@
+[[questions]]
+id = "8b7f93c3-efb0-44e2-a0ca-b45e35620b30"
+type = "MultipleChoice"
+prompt.prompt = "生命周期旨在防止哪类编程错误？"
+answer.answer = "在对象的内存被释放后仍使用指向它的引用"
+prompt.distractors = [
+  "在检查可能出现的错误之前就使用了可失败计算的结果",
+  "索引超出数组边界（缓冲区溢出）",
+  "为对象分配的内存不足"
+]
+context = """
+生命周期有助于标识对象"存活"的时长，以及对该对象的引用是否超出了对象本身的存活期。
+"""
+
+[[questions]]
+id = "77cf924a-ece1-4119-a762-f5f03536b4e1"
+type = "Tracing"
+prompt.program = """
+fn shortest<'a, 'b>(x: &'a str, y: &'b str) -> &'a str {
+  if x.len() < y.len() {
+    x
+  } else {
+    y
+  }
+}
+
+fn main() {
+  println!("{}", shortest("hello", "rust"));
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 5
+context = """
+如果类型签名声明函数必须返回生命周期为 `'a` 的引用，那么返回生命周期为 `'b` 的引用（即此处的 `y`）就是无效的。
+"""

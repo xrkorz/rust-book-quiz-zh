@@ -1,0 +1,31 @@
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+`Stream` trait 最类似于 Rust 标准库中的哪个非异步 trait？
+"""
+prompt.distractors = ["`Write`", "`Index`", "`Sync`"]
+answer.answer = "`Iterator`"
+context = """
+`Stream` trait 提供了 Rust 迭代器的异步版本。
+"""
+id = "f94a87f0-a4d6-4cd6-bcee-dfcc606f8ec2"
+
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+假设你有一个产生序列 `["A", "B", "C"]` 的流，以及另一个产生序列 `["D", "E", "F"]` 的流。
+你不知道每个流何时会发送每个字符，只知道它按指定的顺序发生。
+考虑合并这两个流并打印每个字符。请选出以下哪些输出字符串是可能出现的。
+"""
+prompt.distractors = [
+  "ACBDEF",
+  "CFBEAD"
+]
+answer.answer = [
+  "ABDEFC",
+  "DEFABC"
+]
+context = """
+合并操作始终会遵守每个流内部的顺序，例如 "B" 不可能出现在 "A" 之前。
+"""
+id = "84452eff-13df-4fcb-91ea-1f504d5bfaf0"

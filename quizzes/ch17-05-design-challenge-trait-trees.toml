@@ -1,0 +1,112 @@
+[multipart]
+q = """
+**背景：** 你正在设计一个简单的用户界面框架，它由文本和按钮等控件组成的树构成。
+
+**功能：** API 提供一个 `Widget` trait，定义控件的工作方式。API 客户端实现 `Widget` trait，并调用它来渲染 UI。
+
+**设计方案：** 以下是几种实现该功能的设计方案。
+
+```
+// Option 1: children must be Self
+pub trait Widget: Sized {
+	fn render(&self) -> Vec<Self>;
+}
+
+// Option 2: children are a trait parameter
+pub trait Widget<Children> {
+	fn render(&self) -> Vec<Children>;
+}
+
+// Option 3: children are an associated type
+pub trait Widget {
+	type Children: Widget;
+	fn render(&self) -> Vec<Self::Children>;
+}
+
+// Option 4: children are a reference trait object
+pub trait Widget {
+	fn render(&self) -> Vec<&dyn Widget>;
+}
+
+// Option 5: children are a boxed trait object
+pub trait Widget {
+	fn render(&self) -> Vec<Box<dyn Widget>>;
+}
+```
+"""
+
+[[questions]]
+type = "MultipleChoice"
+multipart = "q"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** API 客户端预计提供一个表示所有可能控件的单一 `WidgetImpl` 枚举，并为 `WidgetImpl` 实现 `Widget` trait。
+"""
+prompt.distractors = ["2", "3", "4", "5"]
+prompt.sortAnswers = true
+answer.answer = ["1"]
+context = """
+如果我们将所有可能的控件表示为单一枚举，例如：
+
+```
+enum WidgetImpl {
+  Button { /* .. */ },
+  Text { /* .. */ },
+  // ..
+}
+
+impl Widget for WidgetImpl { /* .. */ }
+```
+
+那么我们拥有一个"封闭世界"系统，其中控件集合是不可扩展的。`Widget` 只有一个实现，不需要动态分发。
+因此只有方案 1 是合理的，因为 `render` 只会返回其他 `WidgetImpl` 类型。在此需求下，所有其他设计都包含不必要的复杂性。
+"""
+id = "e529cabf-a14c-4f1b-865f-1f376b704df8"
+
+[[questions]]
+type = "MultipleChoice"
+multipart = "q"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** API 客户端预计为每种可能的控件提供一个独立的结构体，并为每个结构体实现 `Widget` trait。
+每个控件可以返回包含任意可能类型控件的向量。
+"""
+prompt.distractors = ["1", "2", "3"]
+prompt.sortAnswers = true
+answer.answer = ["4", "5"]
+context = """
+与上一题不同，现在我们期望每种控件都有独立的类型，例如：
+
+```
+struct Button { /* .. */ }
+impl Widget for Button { /* .. */ }
+
+struct Text { /* .. */ }
+impl Widget for Text { /* .. */ }
+```
+
+因此控件的向量需要是异构的，即可以包含不同类型的控件。
+方案 1、2 和 3 都限制每个 `Widget::render` 实现只能返回单一控件类型的向量。
+方案 4 和方案 5 通过 trait 对象使用动态分发来允许异构控件向量。
+"""
+id = "0fdd5ca0-835f-4999-8d24-37841cb0a1a7"
+
+
+[[questions]]
+multipart = "q"
+type = "MultipleChoice"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** 只有实现了 `Widget` trait 的类型才应从 `render` 中返回。
+"""
+prompt.distractors = ["2"]
+prompt.sortAnswers = true
+answer.answer = ["1", "3", "4", "5"]
+context = """
+方案 2 中的 `Widget` trait 没有约束 `Children: Widget`。
+所有其他方案都确保返回 `Vec<W>`，其中某个 `W` 满足 `W: Widget`。
+"""
+id = "fbed1c75-737c-49f5-8f11-66d25391079b"

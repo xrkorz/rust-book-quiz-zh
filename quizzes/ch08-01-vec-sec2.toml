@@ -1,0 +1,41 @@
+[[questions]]
+id = "5af7c045-95dc-4bd0-9318-7204732e3ed5"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let mut v = vec![1, 2, 3];
+  for i in &mut v {
+    v.push(*i);
+  }
+  println!("{} {} {}", v[3], v[4], v[5]);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 4
+context = """
+尽管 `v` 被可变借用，但这只允许在 for 循环内部修改 `i`，而不能修改 `v`。因此调用 `v.push` 是所有权错误。
+"""
+
+[[questions]]
+id = "e8da8773-8df2-4279-8c27-b7e9eda1dddd"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let mut v: Vec<i32> = vec![1, 2, 3];
+  let mut v2: Vec<&mut i32> = Vec::new();
+  for i in &mut v {
+    v2.push(i);
+  }
+  *v2[0] = 5;
+
+  let a = *v2[0];
+  let b = v[0];
+  println!("{a} {b}");
+}
+"""
+answer.doesCompile = true
+answer.stdout = "5 5"
+context = """
+`i` 的类型为 `&mut i32`，即它是指向 `v` 中某个数字的指针。因此如果我们将 `i` 推入 `v2`，则 `v2` 包含指向 `v` 的指针。
+因此对 `v2[0]` 的修改实际上会修改 `v[0]`。
+"""

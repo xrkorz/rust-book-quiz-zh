@@ -1,0 +1,165 @@
+## 引用循环与内存泄漏
+
+[ch15-06-reference-cycles.md](https://github.com/rust-lang/book/blob/ecef81cbc6f0c2d1c8a67409329b0641258c04c2/src/ch15-06-reference-cycles.md)
+
+Rust 的内存安全性保证使其难以意外地制造永远也不会被清理的内存（被称为 **内存泄漏**，_memory leak_），但并非不可能。Rust 并不保证完全防止内存泄漏，这意味着内存泄漏在 Rust 中被认为是内存安全的。这一点可以通过 `Rc<T>` 和 `RefCell<T>` 看出 Rust 允许出现内存泄漏：创建引用循环的可能性是存在的。这会造成内存泄漏，因为每一项的引用计数永远也到不了 0，持有的数据也就永远不会被释放。
+
+### 制造引用循环
+
+让我们看看引用循环可能是如何发生的，以及如何避免它。先从示例 15-25 中 `List` 枚举和 `tail` 方法的定义开始：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-25/src/main.rs}}
+```
+
+<span class="caption">示例 15-25：一个持有 `RefCell<T>` 的 cons list 定义，这样我们就能修改 `Cons` 变体所引用的内容</span>
+
+这里采用了示例 15-5 中 `List` 定义的另一种变体。现在 `Cons` 变体的第二个元素是 `RefCell<Rc<List>>`，这意味着不同于像示例 15-24 那样能够修改 `i32` 的值，我们希望能够修改 `Cons` 变体所指向的 `List`。这里还增加了一个 `tail` 方法来方便我们在有 `Cons` 变体的时候访问其第二项。
+
+在示例 15-26 中，我们添加了一个 `main` 函数，它使用了示例 15-25 中的定义。这段代码会先在 `a` 中创建一个列表，再创建一个指向 `a` 中列表的 `b` 列表。然后，它会修改 `a` 中的列表，使其指向 `b`，从而创建一个引用循环。沿途加入的 `println!` 语句会展示这一过程中不同位置的引用计数。
+
+<span class="filename">文件：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-26/src/main.rs:here}}
+```
+
+<span class="caption">示例 15-26：创建两个彼此互相指向的 `List` 值，从而形成引用循环</span>
+
+我们在变量 `a` 中创建了一个 `Rc<List>` 实例，它持有一个值为 `5, Nil` 的 `List`。接着，又在变量 `b` 中创建了另一个 `Rc<List>` 实例，它持有一个值为 `10`、并指向 `a` 中列表的 `List`。
+
+然后，我们修改 `a`，让它指向 `b` 而不是 `Nil`，这样就创建了一个循环。为此，我们使用 `tail` 方法获取 `a` 中 `RefCell<Rc<List>>` 的引用，并把它放到变量 `link` 中。接着，调用这个 `RefCell<Rc<List>>` 上的 `borrow_mut` 方法，把它内部的值从持有 `Nil` 的 `Rc<List>` 改成 `b` 中的 `Rc<List>`。
+
+如果保持最后的 `println!` 行注释并运行代码，会得到如下输出：
+
+```console
+{{#include ../listings/ch15-smart-pointers/listing-15-26/output.txt}}
+```
+
+我们可以看到，当把 `a` 中的列表改为指向 `b` 之后，`a` 和 `b` 中 `Rc<List>` 实例的引用计数都变成了 2。在 `main` 结束时，Rust 会先丢弃变量 `b`，这会使 `b` 中那个 `Rc<List>` 实例的引用计数从 2 减到 1。由于引用计数不是 0，所以此时分配在堆上的内存不会被丢弃。然后，Rust 再丢弃 `a`，这会使 `a` 中那个 `Rc<List>` 实例的引用计数也从 2 减到 1。这个实例的内存同样无法被清理，因为另一个 `Rc<List>` 实例仍然引用着它。分配给这些列表的内存将会永远留在那里而不会被回收。为了更直观地展示这个引用循环，我们创建了图 15-4 所示的示意图：
+
+<img alt="Reference cycle of lists" src="img/trpl15-04.svg" class="center" />
+
+<span class="caption">图 15-4：列表 `a` 和 `b` 彼此互相指向，从而形成引用循环</span>
+
+如果取消最后 `println!` 的注释并运行程序，Rust 会尝试打印出 `a` 指向 `b` 指向 `a` 这样的循环直到栈溢出。
+
+相比真实世界的程序，这个例子中创建引用循环的结果并不可怕：创建了引用循环之后程序立刻就结束了。如果在更为复杂的程序中并在循环里分配了很多内存并占有很长时间，这个程序会使用多于它所需要的内存，并有可能压垮系统并造成没有内存可供使用。
+
+创建引用循环并不容易，但也不是不可能。如果你有包含 `Rc<T>` 的 `RefCell<T>` 值或类似的嵌套结合了内部可变性和引用计数的类型，请务必小心确保你没有形成一个引用循环；你无法指望 Rust 帮你捕获它们。创建引用循环是一个程序上的逻辑 bug，你应该使用自动化测试、代码评审和其他软件开发最佳实践来使其最小化。
+
+另一个解决方案是重新组织数据结构，使得一部分引用拥有所有权而另一部分没有。换句话说，循环将由一些拥有所有权的关系和一些无所有权的关系组成，只有所有权关系才能影响值是否可以被丢弃。在示例 15-25 中，我们总是希望 `Cons` 变体拥有其列表，所以重新组织数据结构是不可能的。让我们看看一个由父节点和子节点构成的图的例子，观察何时是使用无所有权的关系来避免引用循环的合适时机。
+
+### 使用 `Weak<T>` 防止引用循环
+
+到目前为止，我们已经展示了调用 `Rc::clone` 会增加 `Rc<T>` 实例的 `strong_count`，和只在其 `strong_count` 为 0 时 `Rc<T>` 实例才会被清理。你也可以通过调用 `Rc::downgrade` 并传递 `Rc<T>` 实例的引用来创建其值的**弱引用**（_weak reference_）。强引用代表如何共享 `Rc<T>` 实例的所有权；弱引用不表达所有权关系，当 `Rc<T>` 实例被清理时其计数没有影响。它们不会造成引用循环，因为任何涉及弱引用的循环会在其相关的值的强引用计数为 0 时被打断。
+
+调用 `Rc::downgrade` 时会得到 `Weak<T>` 类型的智能指针。不同于将 `Rc<T>` 实例的 `strong_count` 加 1，调用 `Rc::downgrade` 会将 `weak_count` 加 1。`Rc<T>` 类型使用 `weak_count` 来记录其存在多少个 `Weak<T>` 引用，类似于 `strong_count`。其区别在于 `weak_count` 无需计数为 0 就能使 `Rc<T>` 实例被清理。
+
+因为 `Weak<T>` 引用的值可能已经被丢弃了，为了使用 `Weak<T>` 所指向的值，我们必须确保其值仍然有效。为此可以调用 `Weak<T>` 实例的 `upgrade` 方法，这会返回 `Option<Rc<T>>`。如果 `Rc<T>` 值还未被丢弃，则结果是 `Some`；如果 `Rc<T>` 已被丢弃，则结果是 `None`。因为 `upgrade` 返回一个 `Option<Rc<T>>`，Rust 会确保处理 `Some` 和 `None` 的情况，所以它不会返回无效指针。
+
+作为示例，我们不再使用只知道下一个元素的列表，而是创建一个既知道子节点又知道父节点的树结构。
+
+#### 创建树形数据结构
+
+首先，我们将构建一棵树，其中节点能够知道自己的子节点。我们会创建一个名为 `Node` 的结构体，它存放自己的 `i32` 值，以及对子 `Node` 值的引用：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-27/src/main.rs:here}}
+```
+
+我们希望 `Node` 能拥有它的子节点，同时也希望能与变量共享这种所有权，以便能够直接访问树中的每个 `Node`。为此，我们将 `Vec<T>` 中元素的类型定义为 `Rc<Node>`。我们还希望能够修改某个节点的子节点，因此把 `children` 中的 `Vec<Rc<Node>>` 包装进了 `RefCell<T>`。
+
+接下来，使用此结构体定义来创建一个叫做 `leaf` 的带有值 `3` 且没有子节点的 `Node` 实例，和另一个带有值 5 并以 `leaf` 作为子节点的实例 `branch`，如示例 15-27 所示：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-27/src/main.rs:there}}
+```
+
+<span class="caption">示例 15-27：创建没有子节点的 `leaf` 节点和以 `leaf` 作为子节点的 `branch` 节点</span>
+
+这里克隆了 `leaf` 中的 `Rc<Node>` 并储存在 `branch` 中，这意味着 `leaf` 中的 `Node` 现在有两个所有者：`leaf` 和 `branch`。可以通过 `branch.children` 从 `branch` 中获得 `leaf`，不过无法从 `leaf` 得到 `branch`。`leaf` 没有到 `branch` 的引用且并不知道它们相互关联。我们希望 `leaf` 知道 `branch` 是其父节点。接下来我们会这么做。
+
+#### 增加从子到父的引用
+
+为了使子节点知道其父节点，需要在 `Node` 结构体定义中增加一个 `parent` 字段。问题是 `parent` 的类型应该是什么。我们知道其不能包含 `Rc<T>`，因为这样 `leaf.parent` 将会指向 `branch` 而 `branch.children` 会包含 `leaf` 的指针，这会形成引用循环，会造成其 `strong_count` 永远也不会为 0。
+
+换一种方式来思考这种关系：父节点应该拥有它的子节点。如果父节点被丢弃了，它的子节点也应该被丢弃。然而，子节点不应该拥有它的父节点。如果我们丢弃一个子节点，父节点仍然应该存在。这正是弱引用适用的场景！
+
+所以 `parent` 使用 `Weak<T>` 类型而不是 `Rc<T>`，具体来说是 `RefCell<Weak<Node>>`。现在 `Node` 结构体定义看起来像这样：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-28/src/main.rs:here}}
+```
+
+这样，一个节点就能够引用其父节点，但不拥有其父节点。在示例 15-28 中，我们更新 `main` 来使用新定义以便 `leaf` 节点可以通过 `branch` 引用其父节点：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-28/src/main.rs:there}}
+```
+
+<span class="caption">示例 15-28：一个 `leaf` 节点，其拥有指向其父节点 `branch` 的弱引用</span>
+
+创建 `leaf` 节点类似于示例 15-27，除了 `parent` 字段有所不同：`leaf` 开始时没有父节点，所以我们新建了一个空的 `Weak<Node>` 引用实例。
+
+此时，当尝试使用 `upgrade` 方法获取 `leaf` 的父节点引用时，会得到一个 `None` 值。如第一个 `println!` 输出所示：
+
+```text
+leaf parent = None
+```
+
+当创建 `branch` 节点时，其也会新建一个 `Weak<Node>` 引用，因为 `branch` 并没有父节点。`leaf` 仍然作为 `branch` 的一个子节点。一旦在 `branch` 中有了 `Node` 实例，就可以修改 `leaf` 使其拥有指向父节点的 `Weak<Node>` 引用。这里使用了 `leaf` 中 `parent` 字段里的 `RefCell<Weak<Node>>` 的 `borrow_mut` 方法，接着使用了 `Rc::downgrade` 函数来从 `branch` 中的 `Rc<Node>` 值创建了一个指向 `branch` 的 `Weak<Node>` 引用。
+
+当再次打印出 `leaf` 的父节点时，这一次将会得到存放了 `branch` 的 `Some` 值：现在 `leaf` 可以访问其父节点了！当打印出 `leaf` 时，我们也避免了如示例 15-26 中最终会导致栈溢出的循环：`Weak<Node>` 引用被打印为 `(Weak)`：
+
+```text
+leaf parent = Some(Node { value: 5, parent: RefCell { value: (Weak) },
+children: RefCell { value: [Node { value: 3, parent: RefCell { value: (Weak) },
+children: RefCell { value: [] } }] } })
+```
+
+没有无限的输出表明这段代码并没有造成引用循环。这一点也可以从观察 `Rc::strong_count` 和 `Rc::weak_count` 调用的结果看出。
+
+#### 可视化 `strong_count` 和 `weak_count` 的变化
+
+让我们通过创建了一个新的内部作用域并将 `branch` 的创建放入其中，来观察 `Rc<Node>` 实例的 `strong_count` 和 `weak_count` 值的变化。这会展示当 `branch` 创建和离开作用域被丢弃时会发生什么。这些修改如示例 15-29 所示：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-29/src/main.rs:here}}
+```
+
+<span class="caption">示例 15-29：在内部作用域创建 `branch` 并检查其强弱引用计数</span>
+
+一旦创建了 `leaf`，其 `Rc<Node>` 的强引用计数为 1，弱引用计数为 0。在内部作用域中创建了 `branch` 并与 `leaf` 相关联，此时 `branch` 中 `Rc<Node>` 的强引用计数为 1，弱引用计数为 1（因为 `leaf.parent` 通过 `Weak<Node>` 指向 `branch`）。这里 `leaf` 的强引用计数为 2，因为现在 `branch` 的 `branch.children` 中储存了 `leaf` 的 `Rc<Node>` 的拷贝，不过弱引用计数仍然为 0。
+
+当内部作用域结束时，`branch` 离开作用域，`Rc<Node>` 的强引用计数减少为 0，所以其 `Node` 被丢弃。来自 `leaf.parent` 的弱引用计数 1 与 `Node` 是否被丢弃无关，所以并没有产生任何内存泄漏！
+
+如果在内部作用域结束后尝试访问 `leaf` 的父节点，会再次得到 `None`。在程序的结尾，`leaf` 中 `Rc<Node>` 的强引用计数为 1，弱引用计数为 0，因为现在 `leaf` 又是 `Rc<Node>` 唯一的引用了。
+
+所有这些管理计数和值的逻辑都内建于 `Rc<T>` 和 `Weak<T>` 以及它们的 `Drop` trait 实现中。通过在 `Node` 定义中指定从子节点到父节点的关系为一个 `Weak<T>` 引用，就能够拥有父节点和子节点之间的双向引用而不会造成引用循环和内存泄漏。
+
+## 总结
+
+这一章涵盖了如何使用智能指针来做出不同于 Rust 常规引用默认所提供的保证与取舍。`Box<T>` 有一个已知的大小并指向分配在堆上的数据。`Rc<T>` 记录了堆上数据的引用计数从而允许多个所有者。`RefCell<T>` 类型及其内部可变性允许我们在保持类型不可变的前提下更改其内部值；它也在运行时而非编译时执行借用规则检查。
+
+我们还讨论了 trait `Deref` 和 `Drop`，它们实现了智能指针的许多功能。同时探索了会造成内存泄漏的引用循环，以及如何使用 `Weak<T>` 来避免它们。
+
+如果本章内容引起了你的兴趣并希望现在就实现你自己的智能指针的话，请阅读 [“The Rustonomicon”][nomicon] 来获取更多有用的信息。
+
+接下来，让我们谈谈 Rust 的并发。届时甚至还会学习到一些新的对并发有帮助的智能指针。
+
+[nomicon]: https://doc.rust-lang.org/nomicon/index.html
+
+{{#quiz ../quizzes/ch15-06-reference-cycles.toml}}

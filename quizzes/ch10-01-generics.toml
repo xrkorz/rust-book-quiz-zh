@@ -1,0 +1,82 @@
+[[questions]]
+id = "0aad53ff-89d7-4d14-8e3d-c17809220252"
+type = "ShortAnswer"
+prompt.prompt = """
+假设你使用了一个第三方函数，你不知道其实现，但知道其类型签名如下：
+
+```
+fn mystery<T>(x: T) -> T {
+  // ????
+}
+```
+
+然后你这样调用 `mystery`：
+
+```
+let y = mystery(3);
+```
+
+假设 `mystery` 不使用任何 unsafe 代码，则 `y` 的值一定是：
+"""
+answer.answer = "3"
+context = """
+在不使用 unsafe 代码的情况下，唯一满足签名 `T -> T` 的函数是恒等函数：
+
+```
+fn mystery<T>(x: T) -> T {
+  x
+}
+```
+
+该函数当然可以 panic 或打印输出，但返回值只能是输入本身。`mystery` 不知道 `T` 是什么类型，因此它无法生成或修改一个 `T` 类型的值。
+更多类似示例参见 [Theorems for free!](https://dl.acm.org/doi/pdf/10.1145/99370.99404)。
+
+**3 确实是正确答案！如果你不认同此答案，请不要提交 bug 报告！**
+"""
+
+[[questions]]
+id = "40ae0cfe-3567-4d05-b0d9-54d612a2d654"
+type = "Tracing"
+prompt.program = """
+fn print_slice<T>(v: &[T]) {
+  for x in v {
+    println!("{x}");
+  }
+}
+
+fn main() {
+  print_slice(&[1, 2, 3]);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 3
+context = """
+如果一个类型是泛型（如 `T`），我们无法对它做任何假设，包括将其转换为字符串的能力。因此 `println!("{x}")` 是无效的，
+因为 `x: &T`。
+"""
+
+
+[[questions]]
+id = "694bb2d0-f2e6-4b0b-a3e7-2d9f9e8b3d09"
+type = "Tracing"
+prompt.program = """
+struct Point<T> { x: T, y: T }
+
+impl Point<i32> {
+  fn f(&self) -> &i32 { &self.y }
+}
+
+impl<T> Point<T> {
+  fn f(&self) -> &T { &self.x }
+}
+
+fn main() {
+  let p: Point<i32> = Point { x: 1, y: 2 };
+  println!("{}", p.f());
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 8
+context = """
+这两个 `f` 的定义相互冲突，当调用 `p.f()` 时，Rust 无法确定应使用哪个 `f`。因此这是一个编译错误。
+"""

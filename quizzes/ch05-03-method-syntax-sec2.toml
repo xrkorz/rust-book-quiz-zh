@@ -1,0 +1,103 @@
+[[questions]]
+id = "97781ca8-ad58-449c-9769-e20b9d2e42a6"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你有一个类型为 `&mut Vec<i32>` 的变量 `v`，你想用以下签名调用 `len` 方法：
+
+```
+impl Vec<i32> {
+  fn len(&self) -> usize {
+    /* ... */
+  }
+}
+```
+
+如果你尝试编译表达式 `v.len()`，下列哪项陈述最好地描述了会发生什么？
+"""
+answer.answer = "可以编译，因为 `&mut` 引用被隐式重新借用为 `&` 引用"
+prompt.distractors = [
+  "无法编译，因为 `&mut Vec<i32>` 与 `&Vec<i32>` 不是相同的类型",
+  "无法编译，因为 `v` 没有被显式解引用",
+  "可以编译，因为 `&self` 可以接受任何种类的引用"
+]
+context = """
+表达式 `v.len()` 脱糖为 `Vec::len(&*v)`，这是对 `v` 的一次有效重新借用，因此该表达式可以编译。
+但是，你不能直接将 `v` 传递给 `Vec::len`，因为 `&self` 特指不可变引用。
+"""
+
+[[questions]]
+id = "35a75881-eb08-486c-92b3-413ab512138a"
+type = "MultipleChoice"
+prompt.prompt = """
+考察这两个用于递增结构体字段的方法。哪种风格更符合 Rust 的惯例？
+
+```
+struct Point(i32, i32);
+impl Point {
+  fn incr_v1(mut self)  { self.0 += 1; }
+  fn incr_v2(&mut self) { self.0 += 1; }
+}
+```
+"""
+answer.answer = "`incr_v2`"
+prompt.distractors = [
+  "`incr_v1`",
+  "两者都符合惯例",
+  "两者都不符合惯例"
+]
+prompt.answerIndex = 1
+context = """
+`incr_v1` 方法不符合惯例，因为它获取了 `Point` 的所有权。这意味着调用 `p.incr_v1()` 之后，`p` 将无法再使用，这对于这个方法来说很可能不是预期行为。
+"""
+
+[[questions]]
+id = "03a0a1ec-8ce6-40f2-b8b7-6dd5402aeb7d"
+type = "Tracing"
+prompt.program = """
+struct Point(i32, i32);
+impl Point {
+  fn incr_x(&mut self) {
+    self.0 += 1;
+  }
+}
+
+fn main() {
+  let mut p = Point(0, 0);
+  p.incr_x();
+  println!("{}", p.0);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "1"
+context = """
+请记住，`.0` 对于像 `Point` 这样的元组结构体是合法的。
+"""
+
+[[questions]]
+id = "be7be598-8a31-4c1a-9171-4ff90f512430"
+type = "Tracing"
+prompt.program = """
+struct Point {
+  x: i32,
+  y: i32
+}
+
+impl Point {
+  fn get_x(&mut self) -> &mut i32 {
+    &mut self.x
+  }
+}
+
+fn main() {
+  let mut p = Point { x: 1, y: 2 };
+  let x = p.get_x();
+  *x += 1;
+  println!("{} {}", *x, p.y);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 16
+context = """
+因为 `get_x` 对整个 `p` 进行了可变借用，所以在 `x` 不再被使用之前，程序不能以任何方式使用 `p`。
+因此在同一行中同时读取 `x` 和 `p.y` 是一个所有权错误。
+"""

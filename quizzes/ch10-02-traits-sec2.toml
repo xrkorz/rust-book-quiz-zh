@@ -1,0 +1,40 @@
+[[questions]]
+id = "a2a1546b-27bf-47d2-a1bc-86d777573f40"
+type = "Tracing"
+prompt.program = """
+use std::fmt::Display;
+fn displayable<T: Display>(t: T) -> impl Display { t }
+
+fn main() {
+  let s = String::from("hello");
+  let mut s2 = displayable(s);
+  s2.push_str(" world");
+  println!("{s2}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 7
+context = """
+因为 `displayable` 返回 `impl Display`，我们只知道 `s2` 是*某个*实现了 `Display` 的类型，
+而不知道它是具有 `push_str` 方法的 `String`。因此无法调用 `s2.push_str(..)`。如果 `displayable`
+的返回类型是 `-> T`，则该程序可以编译通过。
+"""
+
+
+[[questions]]
+id = "8b35f91c-ced2-4b8f-bf1c-90550f2b744b"
+type = "MultipleChoice"
+prompt.prompt = """
+要让以下函数通过类型检查，`T` 所需的最小 trait 约束集合是什么？
+```
+fn f<T: /* ??? */>(t: &T) {
+  let t2 = t.clone();
+  println!("{t2}");
+}
+```
+"""
+answer.answer = "`Clone + Display`"
+prompt.distractors = [ "（无约束）", "`Clone`", "`Clone + Display + Debug`" ]
+context = """
+因为调用了 `clone`，并且在格式化器中使用了 `{}` 显示括号，所以 `T` 必须实现 `Clone` 和 `Display`。
+"""

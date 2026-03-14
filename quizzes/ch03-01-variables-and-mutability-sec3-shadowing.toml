@@ -1,0 +1,34 @@
+[[questions]]
+id = "dca33d34-6294-43f4-9267-fd62d7dce993"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let mut x: u32 = 1;
+  {
+    let mut x = x;
+    x += 2;
+  }
+  println!("{x}");
+}
+"""
+answer.doesCompile = true
+answer.stdout = "1"
+context = """
+语句 `x += 2` 只影响内层花括号内被遮蔽的 `x`，不影响第 2 行外层的 `x`。
+"""
+
+[[questions]]
+id = "15b9d091-3b09-49fe-a472-ba6c0f69e4e0"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let mut x: u32 = 1;
+  x = "Hello world";
+  println!("{x}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 3
+context = """
+变量不能被赋值为与其原始类型不同的值。
+"""

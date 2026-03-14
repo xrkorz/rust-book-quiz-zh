@@ -1,0 +1,22 @@
+[[questions]]
+id = "18bf21e1-4e1a-4e98-861d-c7032710a8ad"
+type = "ShortAnswer"
+prompt.prompt = "要查看 panic 的回溯信息，你应该将哪个环境变量设置为 `1`？"
+answer.answer = "RUST_BACKTRACE"
+context = """
+例如，你可以在命令行运行：`RUST_BACKTRACE=1 cargo run`
+"""
+
+[[questions]]
+id = "23cabd75-88f5-4ff8-8bf5-4bd4d1a9e64a"
+type = "MultipleChoice"
+prompt.prompt = "以下哪个选项不是使用 panic 的合理理由？"
+answer.answer = "程序已进入应向调用函数传达的错误状态"
+prompt.distractors = [
+  "程序即将执行危险操作",
+  "程序应尽快停止执行",
+  "程序已进入不可恢复的错误状态"
+]
+context = """
+panic 不应用于在程序*内部*传达失败信息。默认假设是调用函数不会尝试捕获 panic。
+"""

@@ -1,0 +1,57 @@
+[[questions]]
+id = "8ef2f170-71d9-4f17-a688-b99d8c8072a8"
+type = "Tracing"
+prompt.program = """
+pub mod a {
+  pub mod b {
+    pub fn f() { println!("b1"); }
+    pub mod c {
+      pub fn f() { println!("c1"); }
+    }
+  }
+  pub fn entry() { super::b::c::f(); }
+}
+
+pub mod b {
+  pub fn f() { println!("b2"); }
+  pub mod c {
+    pub fn f() { println!("c2"); }
+  }
+}
+
+fn main() {
+  crate::a::entry();
+}
+"""
+answer.doesCompile = true
+answer.stdout = "c2"
+context = """
+`entry` 使用路径 `super::b::c::f`。`entry` 位于模块 `a` 中，所以 `super` 指向 `a` 的父模块，即根 crate。
+根的子模块 `b` 是最外层的模块 `b`，其子模块 `c` 包含一个打印 `"c2"` 的函数 `f`。
+"""
+
+[[questions]]
+id = "153b12b3-4fbc-449c-99a6-7a2cd469df0f"
+type = "Tracing"
+prompt.program = """
+pub mod point {
+  #[derive(Debug)]
+  pub struct Point(i32, i32);
+
+  impl Point {
+    pub fn origin() -> Self { Point(0, 0) }
+  }
+}
+
+fn main() {
+  let mut p = point::Point::origin();
+  p.0 += 1;
+  println!("{p:?}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 12
+context = """
+虽然 `Point` 结构体和 `origin` 静态方法都是公有的，但字段 `i32` 没有标记为 pub。因此在 `point` 模块外部
+直接访问 `p.0` 是不允许的。如果将第 3 行改为 `pub struct Point(pub i32, pub i32)`，该程序将能编译通过。
+"""

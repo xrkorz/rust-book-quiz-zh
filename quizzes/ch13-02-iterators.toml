@@ -1,0 +1,69 @@
+[[questions]]
+id = "d50dd9fb-f84c-4748-9e45-cd3dc8d5fb47"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪项最能描述为什么迭代器被称为"惰性的"？
+"""
+answer.answer = "迭代器在你调用从中提取元素的方法之前不会产生任何效果"
+prompt.distractors = [
+    "迭代器会为其迭代的每个元素创建一个副本",
+    "迭代器会获取其所迭代的元素序列的所有权",
+    "迭代器只会迭代给定数量的元素"
+]
+context = """
+"惰性"通常意味着"在被请求之前不执行任何工作"，迭代器在调用 `Iterator::next` 之前不会执行任何计算。
+"""
+
+[[questions]]
+id = "19eac65e-44ad-4349-9632-47bdbb519d46"
+type = "MultipleChoice"
+prompt.prompt = """
+判断正误：以下两段代码在语义上是等价的，其中 `iter` 是一个迭代器。
+
+代码片段 1：
+```
+while let Some(x) = iter.next() {
+    f(x);
+}
+```
+
+代码片段 2：
+```
+for x in iter {
+    f(x);
+}
+```
+"""
+answer.answer = "正确"
+prompt.distractors = ["错误"]
+context = """
+for 循环是 `while let` 的语法糖，而 `while let` 本身又是 `loop` 和 `break` 的语法糖。
+"""
+
+[[questions]]
+id = "ff652580-b487-4379-bd70-652f5803321d"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let v = vec![1, 2, 3, 4];
+    let a: Vec<_> = v.iter().filter(|x: &&i32| *x % 2 == 0).map(|x: &i32| x * 2).collect();
+    let b: Vec<_> = v.iter().map(|x: &i32| x * 2).filter(|x: &i32| x % 2 == 0).collect();
+    println!("{} {}", a[0], b[0]);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "4 2"
+context = """
+迭代器的顺序很重要 &mdash; 先过滤再映射与先映射再过滤的结果不同！
+
+你可能会好奇为什么第一个 filter 使用 `*x` 而第二个不需要。
+`v.iter()` 产生 `Iterator<Item = &i32>`。`.filter()` 接受 `Iterator<Item = T>` 作为输入，
+并向其谓词传递 `&T`。因此第 3 行的 `x: &&i32`。Rust 标准库为左侧的 `&i32` 实现了取余运算符 `%`
+（[参见文档](https://doc.rust-lang.org/std/ops/trait.Rem.html#impl-Rem%3Ci32%3E-for-%26'a+i32)），
+但没有为 `&&i32` 实现。所以我们必须对 `x` 解引用一次，才能在表达式 `*x % 2` 中使用它。
+
+相比之下，在第 4 行，`.map()` 接受 `Iterator<Item = T>` 作为输入时，会将 `T` 传递给其闭包。
+因此 `map` 中的闭包接受 `&i32` 作为输入。乘法运算符 `*` 已为 `&i32` 实现，
+所以 `x` 在 `x * 2` 中无需解引用。`x * 2` 运算产生 `i32` 类型的值，因此
+map 的结果是 `Iterator<Item = i32>`。之后的 `filter` 接受 `x: &i32`，同样无需解引用即可执行 `x % 2`。
+"""

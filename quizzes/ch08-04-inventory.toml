@@ -1,0 +1,353 @@
+[[questions]]
+id = "867e5d29-c1eb-44b3-99e3-bb2325b74e44"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// Removes all the zeros in-place from a vector of integers.
+fn remove_zeros(v: &mut Vec<i32>) {
+    for (i, t) in v.iter().enumerate().rev() {
+        if *t == 0 {
+            v.remove(i);
+            v.shrink_to_fit();
+        }
+    }
+}
+```
+
+如果尝试编译此函数，以下哪个选项最能描述你会得到的编译器错误？
+"""
+answer.answer = "`v.remove(i)` 无法将 `v` 借用为可变"
+prompt.distractors = [
+  "`v` 的生命周期不够长，无法调用 `v.remove(i)`",
+  "当 `i` 有效时，`t` 无法被解引用",
+  "`v.iter()` 无法在可变引用上调用"
+]
+context = """
+函数 `v.iter()` 在 for 循环期间对向量 `v` 进行不可变借用。然而，`v.remove(i)` 需要对 `v` 的可变引用。
+因此 `v.remove(i)` 无法将 `v` 借用为可变，因为这会与迭代器产生冲突。
+"""
+
+
+[[questions]]
+id = "dd1bd092-ef8d-4293-a4d6-6a59b5887e98"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// Removes all the zeros in-place from a vector of integers.
+fn remove_zeros(v: &mut Vec<i32>) {
+    for (i, t) in v.iter().enumerate().rev() {
+        if *t == 0 {
+            v.remove(i);
+            v.shrink_to_fit();
+        }
+    }
+}
+```
+
+通常如果你尝试编译此函数，编译器会返回以下错误：
+
+```text
+error[E0502]: cannot borrow `*v` as mutable because it is also borrowed as immutable
+ --> test.rs:5:13
+  |
+3 |     for (i, t) in v.iter().enumerate().rev() {
+  |                   --------------------------
+  |                   |
+  |                   immutable borrow occurs here
+  |                   immutable borrow later used here
+4 |         if *t == 0 {
+5 |             v.remove(i);
+  |             ^^^^^^^^^^^ mutable borrow occurs here
+```
+
+假设编译器没有拒绝此函数。以下哪些程序（如果有的话）会
+（1）通过编译，且（2）在执行时可能导致未定义行为？
+勾选满足两个条件的程序，如果没有则勾选"以上程序均不满足"。
+"""
+answer.answer = [
+"""
+```
+let mut v = vec![5, 5, 0];
+remove_zeros(&mut v);
+println!("{:?}", v);
+```
+""",
+"""
+```
+let mut v = vec![1, 2, 0, 3];
+remove_zeros(&mut v);
+```
+""",
+]
+prompt.distractors = [
+"""
+```
+let mut v = vec![1; 100];
+remove_zeros(&mut v);
+```
+""",
+"以上程序均不满足",
+]
+context = """
+要违反内存安全，`remove_zeros` 必须以包含第一个元素之后存在零的向量来调用。
+调用 `v.shrink_to_fit()` 会释放向量拥有的内存（由于调整大小），这将使包含指向旧数据指针的迭代器 `v.iter()` 失效。
+注意，在调用 `remove_zeros` 后读取向量 `v` 并不是安全性违规的必要条件，因为问题出在 `remove_zeros` 内部。
+"""
+
+[[questions]]
+id = "c7e7e1e1-2788-4dd9-9c18-436bc95b405f"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// Removes all the zeros in-place from a vector of integers.
+fn remove_zeros(v: &mut Vec<i32>) {
+    for (i, t) in v.iter().enumerate().rev() {
+        if *t == 0 {
+            v.remove(i);
+            v.shrink_to_fit();
+        }
+    }
+}
+```
+
+以下修复方案（以黄色高亮显示）中，哪个最符合以下三个标准：
+1. 修复后的函数能通过 Rust 编译器，
+2. 修复后的函数保留了原始代码的意图，
+3. 修复后的函数没有引入不必要的性能损耗
+"""
+answer.answer = """
+```ide
+fn remove_zeros(v: &mut Vec<i32>) {
+    for `[i in (0 .. v.len()).rev()]` {
+        if `[v[i]]` == 0 {
+            v.remove(i);
+            v.shrink_to_fit();
+        }
+    }
+}
+```
+"""
+prompt.distractors = [
+"""
+```ide
+fn remove_zeros(v: &mut Vec<i32>) {
+    for (i, t) in v`[.clone()]`.iter().enumerate().rev() {
+        if *t == 0 {
+            v.remove(i);
+            v.shrink_to_fit();
+        }
+    }
+}
+```
+""",
+"""
+```ide
+fn remove_zeros(v: `[&]`Vec<i32>) `[-> Vec<i32>]` {
+    `[let mut new_vec = Vec::new();]`
+    for (i, t) in v.iter().enumerate().rev() {
+        if *t `[!=]` 0 {
+            `[new_vec.push(*t)]`
+        }
+    }
+    `[new_vec]`
+}
+```
+""",
+"""
+```ide
+fn remove_zeros(v: `[Vec<i32>]`) {
+    for (i, t) in v.iter().enumerate().rev() {
+        if *t == 0 {
+            v.remove(i);
+            v.shrink_to_fit();
+        }
+    }
+}
+```
+""",
+]
+context = """
+任何需要分配新向量的策略（无论是通过 `Vec::clone` 还是 `Vec::new`）都会引入不必要的额外分配。
+因此最简单有效的策略是只迭代索引 `0 .. v.len()`，这不会借用 `v`。我们以逆序执行，
+以避免在删除时出现索引错位的问题。
+
+与问题 1 类似，最符合惯用法的策略实际上是使用我们尚未讨论的内置函数
+[`Vec::retain`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.retain)。
+该函数只保留向量中满足谓词的元素，且内存效率更高。
+"""
+
+[[questions]]
+id = "fb0e3080-7cc8-4338-948e-fae693d137c8"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+/// Reverses the elements of a vector in-place
+fn reverse(v: &mut Vec<String>) {
+    let n = v.len();
+    for i in 0 .. n / 2 {
+        std::mem::swap(&mut v[i], &mut v[n - i - 1]);
+    }
+}
+```
+
+如果尝试编译此程序，以下哪个选项最能描述你会得到的编译器错误？
+"""
+answer.answer = "无法对 `v[i]` 和 `v[n - i - 1]` 两次可变借用 `v`"
+prompt.distractors = [
+  "当 `v` 是可变借用时，无法对 `v.len()` 进行不可变借用",
+  "无法对可变向量的元素 `v[i]` 进行可变借用"
+]
+context = """
+编译器不会考虑用于访问数组的索引的具体值，因此 `&mut v[i]` 和 `&mut v[n - i - 1]` 被认为可能引用同一个元素。
+因此会出现 `v` 不能被两次可变借用的错误。
+"""
+
+
+[[questions]]
+id = "4c703871-3cc3-483f-beb5-876bdbcd223b"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+/// Reverses the elements of a vector in-place
+fn reverse(v: &mut Vec<String>) {
+    let n = v.len();
+    for i in 0 .. n / 2 {
+        std::mem::swap(&mut v[i], &mut v[n - i - 1]);
+    }
+}
+```
+
+通常如果你尝试编译此函数，编译器会返回以下错误：
+
+```text
+error[E0499]: cannot borrow `*v` as mutable more than once at a time
+ --> test.rs:5:40
+  |
+5 |         std::mem::swap(&mut v[i], &mut v[n - i - 1]);
+  |         --------------      -          ^ second mutable borrow occurs here
+  |         |                   |
+  |         |                   first mutable borrow occurs here
+  |         first borrow later used by call
+```
+
+假设编译器没有拒绝此函数。以下哪些程序（如果有的话）会
+（1）通过编译，且（2）在执行时可能导致未定义行为？
+勾选满足两个条件的程序，如果没有则勾选"以上程序均不满足"。
+"""
+answer.answer = ["以上程序均不满足"]
+prompt.distractors = [
+"""
+```
+let mut v = vec![String::from("a"), String::from("b")];
+let x = &v[0];
+reverse(&mut v);
+println!("{x}");
+```
+""",
+"""
+```
+let mut v = vec![String::from("a"), String::from("b")];
+reverse(&mut v);
+```
+""",
+"""
+```
+let mut v = vec![String::from("a"), String::from("b")];
+reverse(&mut v);
+println!("{:?}", v);
+```
+""",
+]
+context = """
+此函数不会导致内存安全违规，因为对所有 `i` 而言 `i != n - i - 1`，所以两个可变引用始终引用不同的元素。
+注意，`let x = &v[0]` 的程序不会编译，因为 Rust 的借用检查器不允许在 `x` 有效期间调用 `reverse`。
+"""
+
+[[questions]]
+id = "380fc77f-190d-4386-9e0e-f9360bbbfd98"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+/// Reverses the elements of a vector in-place
+fn reverse(v: &mut Vec<String>) {
+    let n = v.len();
+    for i in 0 .. n / 2 {
+        std::mem::swap(&mut v[i], &mut v[n - i - 1]);
+    }
+}
+```
+
+以下修复方案（以黄色高亮显示）中，哪个最符合以下三个标准：
+1. 修复后的函数能通过 Rust 编译器，
+2. 修复后的函数保留了原始代码的意图，
+3. 修复后的函数没有引入不必要的性能损耗
+"""
+answer.answer = """
+```ide
+fn reverse(v: &mut Vec<String>) {
+    let n = v.len();
+    for i in 0 .. n / 2 {
+        `[let p1 = &mut v[i] as *mut String;]`
+        `[let p2 = &mut v[n - i - 1] as *mut String;]`
+        `[unsafe { std::ptr::swap_nonoverlapping(p1, p2, 1); }]`
+    }
+}
+```
+"""
+prompt.distractors = [
+"""
+```ide
+fn reverse(v: &mut Vec<String>) {
+    let n = v.len();
+    `[let mut v2 = v.clone();]`
+    for i in 0 .. n / 2 {
+        std::mem::swap(&mut v[i], &mut `[v2]`[n - i - 1]);
+    }
+}
+```
+""",
+"""
+```ide
+fn reverse(v: `[&Vec<String>]`) -> `[Vec<String>]` {
+    let n = v.len();
+    `[let mut v2 = Vec::new();]`
+    for _ in 0 .. `[n]` {
+        `[v2.push(v.pop().unwrap());]`
+    }
+    `[v2]`
+}
+```
+""",
+"""
+```ide
+fn reverse(v: &mut Vec<String>) {
+    let n = v.len();
+    for i in 0 .. n / 2 {
+        `[let s1 = v[i].clone();]`
+        `[let s2 = v[n - i - 1].clone();]`
+        `[v[i] = s2;]`
+        `[v[n - i - 1] = s1;]`
+    }
+}
+```
+""",
+]
+context = """
+当借用检查器拒绝了一个实际上安全且无其他变通方案的操作时，如果对避免分配有严格要求，
+unsafe 代码有时是可以接受的。
+在这个具体案例中，你实际上应该使用 [`Vec::swap`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.swap)，
+它内部就是用经过严格测试的类似 unsafe 代码实现的。
+但总体而言，如果标准库恰好不支持你的使用场景，且使用正确，`unsafe` 是可以接受的。
+"""

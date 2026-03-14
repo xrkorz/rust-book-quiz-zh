@@ -1,0 +1,90 @@
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下函数：
+
+```rust
+async fn print_letters() {
+  let a = async { print!("A"); };
+  let b = async { print!("B"); };
+  let c = async { print!("C"); };
+  c.await;
+  b.await;
+  a.await;
+}
+```
+
+运行 `print_letters().await` 后，以下哪个字符串可能被打印出来？
+"""
+prompt.distractors = ["`ABC`", "`BCA`", "`ACB`"]
+answer.answer = ["`CBA`"]
+context = """
+这个程序的行为是确定性的。打印操作直到 async 块被 await 才会执行。
+各块按 `c`/`b`/`a` 的顺序被 await，所以程序只会打印 `CBA`。
+"""
+id = "8f62c158-525a-43a2-aa6a-0cc106cada10"
+
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+假设给你一个辅助函数 `wait_all(a, b)`，其行为如下：
+* `wait_all` 保证 `a` 和 `b` 都会执行完毕。
+* `wait_all` 不保证公平性或初始执行顺序。
+
+给定以下代码：
+
+```rust
+async fn print_letters() {
+  let fut1 = async {
+    print!("A");
+    sleep().await;
+    print!("B");
+  };
+  let fut2 = async {
+    print!("C");
+    sleep().await;
+    print!("D");
+  }
+  wait_all(fut1, fut2).await;
+}
+```
+
+运行 `print_letters().await` 后，以下哪些字符串可能被打印出来？
+"""
+prompt.distractors = ["`DABC`"]
+answer.answer = [
+  "`ABCD`", "`CADB`", "`ACBD`"
+]
+context = """
+假想的 `wait_all` 原语类似于 `join`，但保证更少。仅凭本题的规格说明，两个 future 的任何交错执行都是合法的。
+唯一无效的输出是颠倒程序执行顺序的情况，例如 `DABC` 会使 `D` 在 `C` 之前打印。
+"""
+id = "4b28f13e-9781-4d29-b886-7639fa527f36"
+
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+假设给你一个消息传递通道 `channel()`，它是非阻塞且*有界*的，
+意味着 `send` 返回一个 future，当通道有容量时该 future 才完成。
+同时假设你有一个函数 `join(a, b)`，它*公平地*等待两个参数都完成。给定以下异步代码：
+
+```rust
+let (tx, mut rx) = channel(16);
+let recv_fut = rx.recv();
+let send_fut = tx.send(0);
+let (n, _) = join(recv_fut, send_fut).await;
+println!("{}", n.unwrap());
+```
+
+执行这段代码会发生什么？
+"""
+prompt.distractors = [
+  "程序打印 `0` 并永远循环",
+  "程序什么都不打印并永远循环",
+  "程序发生 panic"
+]
+answer.answer = "程序打印 `0` 并退出"
+context = """
+由于通道是非阻塞的，我们可以在发送之前创建接收 future，而不会永远循环。
+"""
+id = "e23b7c48-3780-44e7-8ea4-df35032548a1"

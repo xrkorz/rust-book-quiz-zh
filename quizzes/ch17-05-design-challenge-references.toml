@@ -1,0 +1,119 @@
+[multipart]
+q = """
+**背景：** 你正在为游戏引擎设计一个简单的资源管理器。
+
+**功能：** API 客户端提供要加载的资源路径，并获得对已加载资源的访问权限。
+
+**假设：** 你可以假设加载操作是同步且即时完成的。
+
+**设计方案：** 以下是几种实现该功能的设计方案。
+
+```
+pub struct AssetManager {
+    // ...
+}
+
+// Option 1: return a reference
+impl AssetManager {
+    pub fn load(&mut self, path: PathBuf) -> &Asset;
+}
+
+// Option 2: return a mutable reference
+impl AssetManager {
+    pub fn load(&mut self, path: PathBuf) -> &mut Asset;
+}
+
+// Option 3: return a reference-counted pointer
+impl AssetManager {
+    pub fn load(&mut self, path: PathBuf) -> Rc<Asset>;
+}
+
+// Option 4: return a copyable handle that can be turned into a reference
+#[derive(Copy, Clone)]
+pub struct AssetHandle(usize);
+
+impl AssetManager {
+    pub fn load(&mut self, path: PathBuf) -> AssetHandle;
+    pub fn get(&self, handle: AssetHandle) -> &Asset;
+}
+```
+"""
+
+[[questions]]
+type = "MultipleChoice"
+multipart = "q"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** 资源一旦加载，应永久不可变。
+"""
+prompt.distractors = ["2"]
+prompt.sortAnswers = true
+answer.answer = ["1", "3", "4"]
+context = """
+资源的不可变性由不允许可变操作的类型来保证。不可变借用 `&Asset`
+和不可变智能指针（如 `Rc`）都不允许可变操作。因此方案 1、3 和 4 满足此需求。
+方案 2 返回可变借用，不满足该需求。
+"""
+id = "10ae140e-72a6-4594-802a-d656f33cd836"
+
+
+[[questions]]
+type = "MultipleChoice"
+multipart = "q"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** 资源管理器的客户端需要在多次短期借用资源管理器的过程中保持对资源的访问。
+"""
+prompt.distractors = ["1", "2"]
+prompt.sortAnswers = true
+answer.answer = ["3", "4"]
+context = """
+"在借用期间保持访问"意味着客户端想编写如下程序：
+
+```
+let asset = {
+    let manager = get_manager();
+    manager.load("some/path")
+};
+process_asset(asset);
+let another_asset = {
+    let manager = get_manager();
+    manager.load("another/path")
+};
+```
+
+在这种情况下，`load` 返回值的生命周期不能与 `AssetManager` 的生命周期绑定。方案 1 和方案 2
+要求 `&Asset` 和 `&mut Asset` 的存活时间不超过 `&mut self`。因此借用检查器
+会拒绝类似上面资源生命周期超过管理器引用的程序。方案 1 和方案 2 不满足该需求。
+
+方案 3 和方案 4 满足该需求。`Rc<Asset>` 的生命周期与 `&mut self` 的生命周期无关。类似地，
+`AssetHandle` 的生命周期也与 `&mut self` 的生命周期无关。
+"""
+id = "b69cde98-8ccd-4a89-aeeb-80a3338f9e68"
+
+
+[[questions]]
+multipart = "q"
+type = "MultipleChoice"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** 所有资源必须在一个单一的、可预测的时间点被释放，这一点非常重要。
+"""
+prompt.distractors = ["3"]
+prompt.sortAnswers = true
+answer.answer = ["1", "2", "4"]
+context = """
+要在单一时间点释放所有资源，`AssetManager` 必须对资源保持独占所有权。
+因此，当 `AssetManager` 被丢弃（或被指示释放资源）时，
+可以保证所有资源都能被安全地丢弃。
+方案 1、2 和 4 满足此需求。方案 4 要求在客户端于资源释放后调用 `manager.get(handle)` 时，
+`AssetManager::get` 发生 panic。如果客户端确实可能这样做，
+另一种替代方案是让 `get` 返回 `Option<&Asset>`。
+
+方案 3 不满足此需求。引用计数指针由每个 `Rc<Asset>` 的持有者共同拥有。
+`AssetManager` 没有好的方法确保在释放时所有资源都没有其他持有者。
+"""
+id = "48527488-ecfc-4f16-9824-76a3ac7183f4"

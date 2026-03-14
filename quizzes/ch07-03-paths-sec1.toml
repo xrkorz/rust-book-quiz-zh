@@ -1,0 +1,50 @@
+[[questions]]
+id = "4e18f340-e336-43c5-9a95-79dec1f49945"
+type = "ShortAnswer"
+prompt.prompt = "在当前 crate 中，你使用什么关键字来开始一个指向某个条目的绝对路径？"
+answer.answer = "crate"
+context = """
+例如，模块 `a` 中条目 `b` 的绝对路径为 `crate::a::b`。
+"""
+
+[[questions]]
+id = "256d0ce2-da89-4b44-94da-177634fc633a"
+type = "Tracing"
+prompt.program = """
+pub mod foo {
+  fn a() { println!("a"); }
+  mod bar {
+    pub fn b() { println!("b"); }
+  }
+}
+
+fn main() {
+  foo::bar::b();
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 9
+context = """
+`b` 对 `main` 不可访问，因为模块 `bar` 未标记为 `pub`。
+"""
+
+[[questions]]
+id = "5e78e2e4-81dc-42b2-8527-f08b5117982f"
+type = "Tracing"
+prompt.program = """
+pub mod foo {
+  pub mod bar {
+    pub fn b() { println!("b");  }
+  }
+  pub fn a() { bar::b(); }
+}
+
+fn main() {
+  foo::a();
+}
+"""
+answer.doesCompile = true
+answer.stdout = "b"
+context = """
+在 `foo` 内部，使用相对路径引用 `bar` 中的条目是合法的。
+"""

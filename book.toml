@@ -1,0 +1,18 @@
+# Sync any changes to this *other than where explicitly specified* with the copy
+# in `nostarch/book.toml`!
+
+[book]
+title = "Rust 程序设计语言（中文版·含 Quiz）"
+authors = ["Steve Klabnik", "Carol Nichols", "KaiserY 译"]
+
+[output.html]
+additional-css = ["ferris.css"]
+additional-js = ["ferris.js"]
+
+[preprocessor.quiz]
+fullscreen = true
+validate = false
+cache-answers = true
+
+[rust]
+edition = "2024"

@@ -1,0 +1,39 @@
+[[questions]]
+id = "8bd8d8bc-e61e-48c7-ba78-0c89339e5995"
+type = "MultipleChoice"
+prompt.prompt = "以下哪个描述最准确地说明了变量 `x` 不可变（immutable）意味着什么？"
+answer.answer = "`x` 在被赋值后不能被修改。"
+prompt.distractors = [
+  "`x` 存储在内存的不可变区域中。",
+  "在定义之后，`x` 最多只能被修改一次。",
+  "你无法创建对 `x` 的引用。"
+]
+context = """
+不可变（Immutable）意味着"不可更改"。
+"""
+
+[[questions]]
+id = "dcf53c67-b3c9-4c54-8da0-90749cc669e8"
+type = "ShortAnswer"
+prompt.prompt = "在 `let` 之后用于表示变量可以被修改的关键字是什么？"
+answer.answer = "mut"
+context = """
+例如，你可以通过写 `let mut x = 1` 来创建一个可变变量 `x`。
+"""
+
+[[questions]]
+id = "77f9f143-45a6-4f08-bd87-72bc50c00693"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let x = 1;
+  println!("{x}");
+  x += 1;
+  println!("{x}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 4
+context = """
+这是一个编译错误，因为第 4 行尝试修改 `x`，而 `x` 没有被标记为 `mut`。
+"""

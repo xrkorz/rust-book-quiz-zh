@@ -1,0 +1,105 @@
+[[questions]]
+id = "01904807-74c7-41ad-8d8b-cfb30e5ce10c"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪项最准确地描述了 Rust 中*内部可变性*的概念？
+"""
+answer.answer = "允许通过不可变引用来修改数据"
+prompt.distractors = [
+    "将 `unsafe` 代码封装在安全的 API 中",
+    "允许修改数据结构内部的数据",
+    "使用借用检查器在运行时强制保证内存安全"
+]
+context = """
+内部可变性的核心思想是：持有类型为 `&T` 的值时，也能安全地修改 `T` 内部的数据。
+"""
+
+[[questions]]
+id = "380cd865-76c5-419c-8961-af4c59d2ab71"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑一个 API，它跟踪某个特定方法的调用次数：
+
+```
+struct Api {
+    count: ???
+}
+
+impl Api {
+    fn some_method(&self) {
+        // increment count
+        // rest of the method...
+    }
+}
+```
+
+假设计数用 `usize` 表示。对于这种情况，以下哪种包装类型最合适？
+"""
+answer.answer = "`RefCell<usize>`"
+prompt.distractors = [
+    "`Rc<usize>`",
+    "`Box<usize>`",
+    "不需要包装，`usize` 本身就可以"
+]
+context = """
+此处 `RefCell` 很有用，即使 `some_method` 接收的是不可变引用，也能修改内部字段。如果内部字段只是一个整数，更好的选择是 `Cell<usize>` 或 `AtomicUsize`。
+"""
+
+[[questions]]
+id = "d4ae1b8e-79a7-4485-828f-fb30cdeb29d5"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下 `RefCell` 的错误实现，它不检查内部值是否已被借用：
+
+```
+use std::cell::UnsafeCell;
+struct BadRefCell<T>(UnsafeCell<T>);
+impl<T> BadRefCell<T> {
+    pub fn borrow_mut(&self) -> &mut T {
+        unsafe { &mut *self.0.get() }
+    }
+}
+```
+
+现在假设我们有一个这样的 `BadRefCell`：
+
+```
+let v = BadRefCell(UnsafeCell::new(vec![1, 2, 3]));
+```
+
+以下哪个代码片段会利用此 API 违反内存安全？
+"""
+answer.answer = """
+```
+let v1 = v.borrow_mut();
+let n = &v1[0];
+v.borrow_mut().push(0);
+println!("{n}");
+```
+"""
+prompt.distractors = [
+"""
+```
+drop(v.borrow_mut());
+drop(v.borrow_mut());
+```
+""",
+"""
+```
+let v1 = v.borrow_mut();
+let v2 = v.borrow_mut();
+v1.push(0);
+v2.push(0);
+```
+""",
+"""
+```
+v.borrow_mut().push(0);
+let n = v.borrow_mut()[0];
+println!("{n}");
+```
+"""
+]
+context = """
+`BadRefCell` 允许同时持有两个指向底层数据的可变引用，这会导致内存安全违规，例如在持有 vector 内容引用的同时对其进行重新分配。
+"""

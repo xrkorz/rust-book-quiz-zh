@@ -1,0 +1,40 @@
+[[questions]]
+id = "affe428d-0a8e-430b-9567-99e6b7563c0f"
+type = "MultipleChoice"
+prompt.prompt = """
+在不进行额外配置的情况下运行 `cargo test` 时，以下哪项操作如果由多个测试同时执行可能无法正确工作？
+"""
+answer.answer = "向同一个文件写入文本"
+prompt.distractors = [
+  "将字符串记录到标准输出",
+  "通过 panic 让测试失败",
+  "从同一个数据库读取数据"
+]
+context = """
+测试默认并行运行，因此非线程安全的操作（如向同一个文件写入）可能会引发竞争条件。
+"""
+
+[[questions]]
+id = "19e292f4-4bc4-4868-a58a-edf62c3e3b2a"
+type = "ShortAnswer"
+prompt.prompt = """
+假设程序包含以下单元测试：
+
+```
+#[test]
+fn test_the_logger() { /* ... */ }
+
+#[test]
+fn test_the_database() { /* ... */ }
+
+#[test]
+fn test_logger_and_database() { /* ... */ }
+```
+
+你能传递给 `cargo test <字符串>` 的*最短*字符串是什么，使得*只有* `test_the_logger` 和 `test_the_database` 被执行？
+"""
+answer.answer = "h"
+context = """
+不包含在 `test_logger_and_database` 中、但同时包含在 `test_the_logger` 和 `test_the_database` 中的最短子字符串
+是 "h"（即 "the" 的中间字符）。
+"""

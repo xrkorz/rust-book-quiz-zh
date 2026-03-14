@@ -1,0 +1,47 @@
+[[questions]]
+id = "c5b27431-c318-4243-9621-cadacb737f5a"
+type = "MultipleChoice"
+prompt.prompt = """
+判断正误：以下代码会终止（即不会无限循环）。
+
+```
+fn main() {
+    let mut x = 0;
+    'a: loop {
+        x += 1;
+        'b: loop {
+            if x > 10 {
+                continue 'a;
+            } else {
+                break 'b;
+            }
+        }
+        break;
+    }
+}
+```
+"""
+answer.answer = "正确"
+prompt.distractors = [ "错误" ]
+context = """
+实际上它会在循环的第一次迭代后终止。
+"""
+
+[[questions]]
+id = "46a52842-d4eb-4dc9-8885-f31a2f2f59b4"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let a = [5; 10];
+    let mut sum = 0;
+    for x in a {
+        sum += x;
+    }
+    println!("{sum}");
+}
+"""
+answer.doesCompile = true
+answer.stdout = "50"
+context = """
+数组 `a` 包含 10 个重复的元素 `5`，因此其总和为 `50`。答案不是 `15`——注意语法 `[5; 10]` 与 `[5, 10]` 不同。
+"""

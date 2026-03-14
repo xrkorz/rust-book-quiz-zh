@@ -1,0 +1,37 @@
+[[questions]]
+id = "904a0808-22d1-45e5-9611-cf143babbc41"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪项是正确的顺序？其中"A > B"表示"A 包含 B"？
+"""
+answer.answer = "package > crate > module"
+prompt.distractors = [ "module > crate > package", "crate > package > module" ]
+context = """
+package（包）是最顶层的组织单元，包含 crate（库）。crate 包含 module（模块）。
+"""
+
+[[questions]]
+id = "d45c7cbe-6089-40b9-843c-fbb9ff48ca49"
+type = "ShortAnswer"
+prompt.prompt = """
+假设你看到一个 Rust 包 `foobar`，其目录结构如下：
+
+```text
+foobar
+├── Cargo.toml
+├── build.rs
+└── src/
+    ├── main.rs
+    ├── util.rs
+    ├── lib.rs
+    └── bin/
+        └── alt.rs
+```
+
+这个包包含多少个 crate？请用数字回答，例如 0、1 等。
+"""
+answer.answer = "3"
+context = """
+`main.rs` 生成一个二进制 crate，`lib.rs` 生成一个库 crate，`bin/alt.rs` 生成一个二进制 crate。`util.rs` 可能作为其中某个 crate 的模块使用，
+但它不是 Rust 识别的特殊文件名，所以不会独立成为一个 crate。`build.rs` 是构建脚本。
+"""

@@ -1,0 +1,71 @@
+[[questions]]
+id = "20846719-fe7b-48b8-abfd-9c5f1174472f"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下结构的工作空间：
+
+```
+├── Cargo.lock
+├── Cargo.toml
+└── crates
+    ├── a
+    |   ├── lib.rs
+    |   └── Cargo.toml
+    └── b
+        ├── lib.rs
+        └── Cargo.toml
+```
+
+各文件内容如下：
+
+```
+// crates/b/lib.rs
+pub fn f() {}
+```
+
+```toml
+# crates/a/Cargo.toml
+[dependencies]
+b = {path = "../b"}
+```
+
+在 `a/lib.rs` 中引用 `f` 的正确路径是哪个？
+"""
+answer.answer = "`b::f`"
+prompt.distractors = [
+    "`crates::b::f`",
+    "`workspace::b::f`",
+    "`super::b::f`",
+]
+context = """
+从 `a` 的角度来看，`b` 与其他外部 crate 一样，因此访问其条目时不需要任何前缀。
+"""
+
+[[questions]]
+id = "bc8a69b2-d9a8-4438-8657-391c3fda5ed9"
+type = "ShortAnswer"
+prompt.prompt = """
+考虑一个包含三个包 `a`、`b` 和 `c` 的工作空间，它们各自的清单文件如下：
+
+```toml
+# a/Cargo.toml
+[dependencies]
+rand = "0.8.4"
+
+# b/Cargo.toml
+[dependencies]
+rand = "0.7.3"
+
+# c/Cargo.toml
+[dependencies]
+rand = "0.8.5"
+```
+
+编译工作空间中的所有包时，会使用多少个不同版本的 `rand`？
+请用数字作答，例如 0、1，以此类推。
+"""
+answer.answer = "2"
+context = """
+根据语义版本控制规则，`a` 和 `c` 都会共用次要版本 `0.8` 的最新补丁版本。
+`b` 会使用次要版本 `0.7` 的最新补丁版本。因此总共会使用两个版本。
+"""

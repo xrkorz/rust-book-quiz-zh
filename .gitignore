@@ -1,0 +1,16 @@
+book/
+*~
+.idea
+.vscode
+.DS_Store
+target
+tmp
+.wrangler
+.cargo
+.env
+.env.*
+
+/src/quiz
+/src/aquascope
+.aquascope-cache
+.nova

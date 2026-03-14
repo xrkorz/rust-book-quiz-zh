@@ -1,0 +1,47 @@
+[[questions]]
+id = "5ae11501-25d9-4b94-8e88-aa1c2122779f"
+type = "MultipleChoice"
+prompt.prompt = """
+判断正误：执行以下两段代码，`x` 的值是否相同？
+
+代码片段 1：
+```
+let x = if cond { 1 } else { 2 };
+```
+
+代码片段 2：
+```
+let x;
+if cond {
+  x = 1;
+} else {
+  x = 2;
+}
+```
+
+（注意：两段代码均可编译通过！）
+"""
+answer.answer = "正确"
+prompt.distractors = [ "错误" ]
+context = """
+第一个 if 表达式是第二个 if 语句行为的更简洁写法。
+
+注意，Rust **不要求**在第二段代码中用 `let mut` 声明 `x`。
+这是因为 Rust 能判断 `x` 只会被赋值一次，因为 if 语句只有一个分支会执行。
+"""
+
+[[questions]]
+id = "4e07358c-b318-49cb-8210-fbed7ed50e23"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let x = 1;
+  let y = if x { 0 } else { 1 };
+  println!("{y}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 3
+context = """
+if 表达式的条件必须是布尔值。Rust 没有"真值"或"假值"的概念。
+"""

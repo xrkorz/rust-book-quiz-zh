@@ -1,0 +1,16 @@
+[[questions]]
+id = "a4680619-9533-4cbb-a785-7b73570168af"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪些面向对象编程的特性是 Rust 实现了的？
+"""
+answer.answer = [
+    "带方法的对象",
+    "私有数据的封装",
+]
+prompt.distractors = [
+    "继承父类的方法"
+]
+context = """
+Rust 拥有对象（即结构体）和封装（通过 `pub` 关键字），但不支持继承。
+"""

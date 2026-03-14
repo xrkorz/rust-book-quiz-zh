@@ -1,0 +1,40 @@
+[[questions]]
+id = "e6cbd582-9692-4045-a984-8770a12e1b95"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪项最能描述 Rust 会推断闭包的参数/返回类型，但不对顶层函数进行推断的原因？
+"""
+answer.answer = "顶层函数可以作为库的外部接口，而闭包不能直接暴露"
+prompt.distractors = [
+  "由于停机问题，Rust 在数学上不可能推断顶层函数的类型",
+  "为了与旧版本 Rust 保持向后兼容性",
+  "任何可赋值给变量的内容都可以进行类型推断，而顶层函数不能赋值给变量"
+]
+context = """
+Rust 理论上可以为顶层函数提供类型推断，Haskell 和 OCaml 等函数式语言就具备这一特性。
+然而，Rust 的设计者有意要求在顶层函数上标注类型，以促进接口层面的清晰性：一个函数始终具有它所声明的确切类型。
+"""
+
+[[questions]]
+id = "f844d1c2-3f63-4cdb-b16e-6e818e996e0d"
+type = "MultipleChoice"
+prompt.prompt = """
+Rust 允许在闭包参数中使用模式匹配，包括使用下划线。例如，你可以这样写：
+
+```rust
+let f = |_| (); // 有时称为"马桶闭包"
+let s = String::from("Hello");
+f(s);
+```
+
+以下哪项最准确地描述了此程序中 `f` 与 `s` 的关系？
+"""
+answer.answer = "`f` 导致 `s` 被立即丢弃"
+prompt.distractors = [
+  "`f` 对 `s` 没有任何影响",
+  "`f` 读取 `s` 然后丢弃结果",
+  "`f` 将 `s` 捕获到其环境中"
+]
+context = """
+"马桶闭包"类似于 [`std::mem::drop`](https://doc.rust-lang.org/std/mem/fn.drop.html)，即一个移动参数并使其被丢弃的函数。
+"""

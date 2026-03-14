@@ -1,0 +1,152 @@
+[[questions]]
+id = "cbe8ef63-4f7e-45fd-b11f-e6eba40587b0"
+type = "MultipleChoice"
+prompt.prompt = """
+下列哪项最好地解释了为什么 `i32` 可以无需移动地复制，而 `String` 不行？
+"""
+answer.answer = "`String` 拥有堆上的数据，而 `i32` 不拥有"
+prompt.distractors = [
+    "`i32` 在内存中比 `String` 占用更少空间",
+    "`i32` 是 Rust 中的基本类型，而 `String` 不是",
+    "`String` 可以放在堆上，而 `i32` 只能放在栈上"
+]
+context = """
+如果 `String` 可以无需移动地复制，那么两个变量就可能都认为自己拥有同一个字符串，从而导致双重释放。
+"""
+
+[[questions]]
+id = "512e1ec0-cd7b-4a90-949b-d7b08b4009a8"
+type = "MultipleChoice"
+prompt.prompt = """
+以下代码片段无法编译：
+
+```rust
+let s = String::from("Hello world");
+let s_ref = &s;
+let s2 = *s_ref;
+println!("{s2}");
+```
+
+下列哪项最好地描述了如果允许该程序执行，可能发生的未定义行为？
+"""
+answer.answer = "程序结束时字符串被释放两次"
+prompt.distractors = [
+  "`println` 中对 `s2` 的读取是对已释放内存的使用",
+  "解引用 `*s_ref` 是对已释放内存的使用",
+  "该程序中不存在未定义行为"
+]
+context = """
+`println` 在技术上是安全的，因为字符串要到当前作用域结束时才会被释放。但随后会发生未定义行为——字符串因 `s` 和 `s2` 而被释放两次。
+"""
+
+[[questions]]
+id = "1e31e163-5bd4-4385-b222-33c19058bf6a"
+type = "MultipleChoice"
+prompt.prompt = """
+以下程序无法编译：
+
+```rust
+fn copy_to_prev(v: &mut Vec<i32>, i: usize) {
+  let n = &mut v[i];
+  *n = v[i - 1];
+}
+fn main() {
+  let mut v = vec![1, 2, 3];
+  copy_to_prev(&mut v, 1);
+}
+```
+
+下列哪项最好地描述了如果允许该程序执行，可能发生的未定义行为？
+"""
+answer.answer = "该程序中不存在未定义行为"
+prompt.distractors = [
+  "赋值 `*n` 是对已释放内存的使用",
+  "借用 `&mut v[i]` 创建了一个指向已释放内存的指针",
+  "读取 `v[i - 1]` 是对已释放内存的使用"
+]
+context = """
+该程序是安全的，执行时不会产生未定义行为。（如果 `i` 超出 `v` 的边界，Rust 会在运行时 panic，而不是导致未定义行为。）
+
+问题在于 Rust 无法确定 `v[i]` 和 `v[i - 1]` 一定指向不同的元素。
+"""
+
+
+[[questions]]
+id = "4df75888-2cd5-4259-8629-46a307429fd0"
+type = "MultipleChoice"
+prompt.prompt = """
+考察这个简化自上一题函数的函数：
+
+```
+/// Adds "Ph.D." to a person's name
+fn award_phd(name: &String) {
+    let mut name = *name;
+    name.push_str(", Ph.D.");
+}
+```
+
+Rust 编译器以如下错误拒绝了此函数：
+
+```text
+error[E0507]: cannot move out of `*name` which is behind a shared reference
+ --> test.rs:3:20
+  |
+3 |     let mut name = *name;
+  |                    ^^^^^
+  |                    |
+  |                    move occurs because `*name` has type `String`, which does not implement the `Copy` trait
+  |                    help: consider borrowing here: `&*name`
+```
+
+假设编译器没有拒绝此函数。从下列程序中选出所有（如有）在执行时可能导致未定义行为的程序。如果没有任何程序会导致未定义行为，则勾选"以下程序均不会"。
+"""
+answer.answer = [
+"""
+```
+let name = String::from("Ferris");
+award_phd(&name);
+```
+""",
+"""
+```
+let name = String::from("Ferris");
+award_phd(&name);
+println!("{}", name);
+```
+""",
+"""
+```
+let name = String::from("Ferris");
+let name_ref = &name;
+award_phd(&name);
+println!("{}", name_ref);
+```
+""",
+
+]
+prompt.distractors = [
+  "以下程序均不会"
+]
+context = """
+语句 `let mut name = *name` 使 `name` 获取了输入字符串的所有权。然而，调用方同时也仍然保留着该字符串的所有权。因此，`award_phd` 执行完毕后，字符串会被释放。所以以上每个程序都存在未定义行为，因为 `name` 最终会被第二次释放。无论在调用 `award_phd` 之后是否读取 `name` 或其引用，结果都一样。
+"""
+
+[[questions]]
+id = "1f48fda5-afc6-440b-a9aa-53dc8d54efaa"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let mut point = [0, 1];
+    let mut x = point[0];
+    let y = &mut point[1];
+    x += 1;
+    *y += 1;
+    println!("{} {}", point[0], point[1]);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "0 2"
+context = """
+该程序可以编译，因为绑定 `x` 时复制了 `point[0]`，从而允许 `y` 对 `point[1]` 进行可变借用。
+`x += 1` 的修改不会影响 `point`，而 `*y += 1` 会，所以最终结果为 `0 2`。
+"""

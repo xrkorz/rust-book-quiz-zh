@@ -1,0 +1,110 @@
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+给定一个 `sleep(d)` 函数，它会睡眠指定的时长，考虑以下代码：
+
+```rust
+let futs: Vec<_> = [1, 2, 3].iter().map(|n| async move {
+  sleep(Duration::from_secs(5)).await;
+  n + 1
+}).collect();
+
+for fut in futs {
+  let n = fut.await;
+  println!("{n}");
+}
+```
+
+执行时，大约需要多少秒？
+"""
+prompt.distractors = ["5", "0"]
+answer.answer = "15"
+context = """
+不使用 `join_all` 这样的函数，这些 future 不会并发运行。因此这段代码需要 15 秒（每个列表元素 5 秒）。
+"""
+id = "68680e2e-7a9f-4cee-8080-70e57fe5a2b3"
+
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在设计一个具有以下规格的工具函数：
+
+> `map_stringify` 接受两个参数：一个输入向量，以及一个将输入转换为输出的异步函数，
+> 其中输出可以转换为字符串。
+> `map_stringify` 返回一个字符串化输出的向量。
+
+以下哪个函数类型签名最能体现这个规格？
+"""
+prompt.distractors = [
+"""
+```rust
+async fn map_stringify(
+  inputs: Vec<String>, f: impl Future<Output = String>
+) -> Vec<String>
+```
+""",
+"""
+```rust
+fn map_stringify<I, O, F>(
+  inputs: Vec<I>, f: impl Fn(I) -> O,
+) -> Vec<impl Future<Output = String>>
+where
+  O: ToString,
+```
+""",
+"""
+```rust
+async fn map_stringify<I, F>(
+  inputs: Vec<I>, f: impl Fn(I) -> F,
+) -> Vec<String>
+where
+  F: Future + ToString,
+```
+"""]
+answer.answer = """
+```rust
+async fn map_stringify<I, O, F>(
+  inputs: Vec<I>, f: impl Fn(I) -> F,
+) -> Vec<String>
+where
+  O: ToString,
+  F: Future<Output = O>,
+```
+"""
+context = """
+以下是该函数规格的一种实现：
+
+```rust
+async fn map_stringify<I, O, F>(
+  f: impl Fn(I) -> F, inputs: Vec<I>
+) -> Vec<String>
+where
+  O: ToString,
+  F: Future<Output = O>,
+{
+  let f = &f;
+  let futs = inputs
+    .into_iter()
+    .map(|input| async move { f(input).await.to_string() });
+  futures::future::join_all(futs).await
+}
+```
+"""
+id = "b42a9c5b-bfe7-4d6f-967a-f8ff2a6faa0d"
+
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在编写一个程序，需要运行一些异步代码，但每隔 500ms 检查一次计算是否应该停止。
+哪个辅助函数最适合完成这个任务？
+"""
+prompt.distractors = [
+  "`join`",
+  "`yield`",
+  "`spawn` / `spawn_task`"
+]
+answer.answer = "`race` / `select`"
+context = """
+例如，你可以在循环中对一个长时间运行的 future 和一个 500ms 后完成的睡眠 future 执行 `select`。
+"""
+id = "7da21e95-8e03-412b-8c4d-90ccfc8c6802"

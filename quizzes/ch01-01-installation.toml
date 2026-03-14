@@ -1,0 +1,8 @@
+[[questions]]
+id = "6286342a-84c1-47c5-bfd2-f34b51df813c"
+type = "ShortAnswer"
+prompt.prompt = "用于管理你机器上 Rust 版本的命令行工具叫什么名字？"
+answer.answer = "rustup"
+context = """
+例如，你可以输入 `rustup update` 来获取最新版本的 Rust。
+"""

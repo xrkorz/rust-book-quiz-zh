@@ -1,0 +1,201 @@
+## 泛型数据类型
+
+[ch10-01-syntax.md](https://github.com/rust-lang/book/blob/3986f214fd82427b4401adf4d7dc0911c917e1e8/src/ch10-01-syntax.md)
+
+我们使用泛型来为函数签名或结构体之类的项创建定义，这样它们就可以配合多种不同的具体数据类型使用。先来看看如何使用泛型定义函数、结构体、枚举和方法。然后再讨论泛型会如何影响代码性能。
+
+### 在函数定义中使用泛型
+
+当使用泛型定义函数时，本来在函数签名中指定参数和返回值的类型的地方，会改用泛型来表示。采用这种技术，使得代码适应性更强，从而为函数的调用者提供更多的功能，同时也避免了代码的重复。
+
+回到 `largest` 函数。示例 10-4 展示了两个都用来寻找切片中最大值的函数。接着，我们会把它们合并成一个使用泛型的函数。
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-04/src/main.rs:here}}
+```
+
+<span class="caption">示例 10-4：两个函数，不同点只是名称和签名类型</span>
+
+`largest_i32` 函数是从示例 10-3 中摘出来的，它用来寻找 slice 中最大的 `i32`。`largest_char` 函数寻找 slice 中最大的 `char`。因为两者函数体的代码是一样的，我们可以定义一个函数，再引进泛型参数来消除这种重复。
+
+为了给这个新函数中的类型做参数化，我们需要给类型参数命名，就像给函数的值参数命名一样。任何标识符都可以作为类型参数名。但这里我们使用 `T`，因为按照惯例，Rust 中的类型参数名都很短，通常只有一个字母，而 Rust 类型名的命名约定是 UpperCamelCase。`T` 是 _type_ 的缩写，也是大多数 Rust 程序员的默认选择。
+
+如果你要在函数体中使用某个参数，就必须先在函数签名中声明它的名字，让编译器知道这个名字表示什么。同理，当你在函数签名中使用类型参数名时，也必须先声明它。为了定义泛型版的 `largest` 函数，我们把类型名声明放在函数名和参数列表之间的尖括号 `<>` 里，像这样：
+
+```rust,ignore
+fn largest<T>(list: &[T]) -> &T {
+```
+
+我们可以把这个定义读作：“函数 `largest` 对某个类型 `T` 是泛型的。”这个函数有一个名为 `list` 的参数，它是由 `T` 类型值组成的切片。`largest` 函数会返回一个指向同样类型 `T` 值的引用。
+
+示例 10-5 中的 `largest` 函数在它的签名中使用了泛型，统一了两个实现。该示例也展示了如何调用 `largest` 函数，把 `i32` 值的 slice 或 `char` 值的 slice 传给它。请注意这些代码还不能编译。
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust,ignore,does_not_compile
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-05/src/main.rs}}
+```
+
+<span class="caption">示例 10-5：一个使用泛型参数的 `largest` 函数定义，尚不能编译</span>
+
+如果现在就编译这段代码，会出现如下错误：
+
+```console
+{{#include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-05/output.txt}}
+```
+
+帮助信息里提到了 `std::cmp::PartialOrd`，这是一个 trait，我们会在下一节讨论 trait。现在先知道，这个错误说明 `largest` 的函数体并不能适用于 `T` 所有可能的类型。因为我们想在函数体中比较 `T` 类型的值，所以只能使用那些值可以排序的类型。为了支持比较，标准库提供了 `std::cmp::PartialOrd` trait，你可以为类型实现它（更多内容见附录 C）。要修复示例 10-5，我们可以按照帮助信息的建议，把 `T` 限制为只接受实现了 `PartialOrd` 的类型。这样代码就能编译，因为标准库已经为 `i32` 和 `char` 实现了 `PartialOrd`。
+
+### 结构体定义中的泛型
+
+我们也可以使用 `<>` 语法来定义结构体，让一个或多个字段使用泛型类型参数。示例 10-6 定义了一个 `Point<T>` 结构体，用来保存任意类型的 `x` 和 `y` 坐标值：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-06/src/main.rs}}
+```
+
+<span class="caption">示例 10-6：`Point` 结构体存放了两个 `T` 类型的值 `x` 和 `y`</span>
+
+在结构体定义中使用泛型的语法类似于函数定义中使用泛型。首先，必须在结构体名称后面的尖括号中声明泛型参数的名称。接着在结构体定义中可以指定具体数据类型的位置使用泛型类型。
+
+注意 `Point<T>` 的定义中只使用了一个泛型类型，这个定义表明结构体 `Point<T>` 对于一些类型 `T` 是泛型的，而且字段 `x` 和 `y` **都是** 相同类型的，无论它具体是何类型。如果尝试创建一个有不同类型值的 `Point<T>` 的实例，像示例 10-7 中的代码就不能编译：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust,ignore,does_not_compile
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-07/src/main.rs}}
+```
+
+<span class="caption">示例 10-7：字段 `x` 和 `y` 的类型必须相同，因为它们都有相同的泛型类型 `T`</span>
+
+在这个例子中，当把整型值 `5` 赋值给 `x` 时，就告诉了编译器这个 `Point<T>` 实例中的泛型 `T` 全是整型。接着指定 `y` 为浮点值 `4.0`，因为 `y` 被定义为与 `x` 相同类型，所以将会得到一个像这样的类型不匹配错误：
+
+```console
+{{#include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-07/output.txt}}
+```
+
+如果想要定义一个 `x` 和 `y` 可以有不同类型且仍然是泛型的 `Point` 结构体，我们可以使用多个泛型类型参数。在示例 10-8 中，我们修改 `Point` 的定义为拥有两个泛型类型 `T` 和 `U`。其中字段 `x` 是 `T` 类型的，而字段 `y` 是 `U` 类型的：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-08/src/main.rs}}
+```
+
+<span class="caption">示例 10-8：使用两个泛型的 `Point`，这样 `x` 和 `y` 可能是不同类型</span>
+
+现在，示例里的所有这些 `Point` 实例都合法了！你可以在定义中使用任意多个泛型类型参数，但如果超过几个，代码就会变得难以阅读。如果你发现自己在代码里需要很多泛型类型，那可能意味着这段代码应该被重构成更小的部分。
+
+### 枚举定义中的泛型
+
+和结构体类似，枚举也可以在成员中存放泛型数据类型。第六章我们曾用过标准库提供的 `Option<T>` 枚举，这里再回顾一下：
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+```
+
+现在这个定义应该更容易理解了。如你所见 `Option<T>` 是一个拥有泛型 `T` 的枚举，它有两个成员：`Some`，它存放了一个类型 `T` 的值，和不存在任何值的`None`。通过 `Option<T>` 枚举可以表达有一个可能的值的抽象概念，同时因为 `Option<T>` 是泛型的，无论这个可能的值是什么类型都可以使用这个抽象。
+
+枚举也可以拥有多个泛型类型。第九章使用过的 `Result` 枚举定义就是一个这样的例子：
+
+```rust
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+`Result` 枚举有两个泛型类型，`T` 和 `E`。`Result` 有两个成员：`Ok`，它存放一个类型 `T` 的值，而 `Err` 则存放一个类型 `E` 的值。这个定义使得 `Result` 枚举能很方便的表达任何可能成功（返回 `T` 类型的值）也可能失败（返回 `E` 类型的值）的操作。实际上，这就是我们在示例 9-3 用来打开文件的方式：当成功打开文件的时候，`T` 对应的是 `std::fs::File` 类型；而当打开文件出现问题时，`E` 的值则是 `std::io::Error` 类型。
+
+当你意识到代码中定义了多个结构体或枚举，它们不一样的地方只是其中的值的类型的时候，不妨通过泛型类型来避免重复。
+
+### 方法定义中的泛型
+
+我们可以像第五章那样为结构体和枚举实现方法，并在这些方法定义中使用泛型。示例 10-9 展示了示例 10-6 中定义的 `Point<T>` 结构体，以及在其上实现的一个名为 `x` 的方法。
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-09/src/main.rs}}
+```
+
+<span class="caption">示例 10-9：在 `Point<T>` 结构体上实现方法 `x`，它返回 `T` 类型的字段 `x` 的引用</span>
+
+这里在 `Point<T>` 上定义了一个叫做 `x` 的方法用于返回字段 `x` 中数据的引用。
+
+注意必须在 `impl` 后面声明 `T`，这样就可以在 `Point<T>` 上实现的方法中使用 `T` 了。通过在 `impl` 之后声明泛型 `T`，Rust 就知道 `Point` 的尖括号中的类型是泛型而不是具体类型。我们可以为泛型参数选择一个与结构体定义中声明的泛型参数所不同的名称，不过依照惯例使用了相同的名称。如果你在`impl`中编写一个声明泛型类型的方法，那么该方法将在任何类型的实例上定义，无论最终用什么具体类型来替换泛型类型。（译者注：以示例 10-9 为例，`impl` 中声明了泛型类型参数 `T`，`x` 是编写在 `impl` 中的方法，`x` 方法将会定义在 `Point<T>` 的任何实例上，无论最终替换泛型类型参数 `T` 的是何具体类型）。
+
+定义方法时也可以为泛型指定限制（constraint）。例如，可以选择为 `Point<f32>` 实例实现方法，而不是为泛型 `Point` 实例。示例 10-10 展示了一个没有在 `impl` 之后（的尖括号）声明泛型的例子，这里使用了一个具体类型，`f32`：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-10/src/main.rs:here}}
+```
+
+<span class="caption">示例 10-10：构建一个只用于拥有泛型参数 `T` 的结构体的具体类型的 `impl` 块</span>
+
+这段代码意味着 `Point<f32>` 类型会有一个方法 `distance_from_origin`，而其他 `T` 不是 `f32` 类型的 `Point<T>` 实例则没有定义此方法。这个方法计算点实例与坐标 (0.0, 0.0) 之间的距离，并使用了只能用于浮点型的数学运算符。
+
+结构体定义中的泛型类型参数并不总是与结构体方法签名中使用的泛型是同一类型。示例 10-11 中为 `Point` 结构体使用了泛型类型 `X1` 和 `Y1`，为 `mixup` 方法签名使用了 `X2` 和 `Y2` 来使得示例更加清楚。这个方法用 `self` 的 `Point` 类型的 `x` 值（类型 `X1`）和参数的 `Point` 类型的 `y` 值（类型 `Y2`）来创建一个新 `Point` 类型的实例：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+{{#rustdoc_include ../listings/ch10-generic-types-traits-and-lifetimes/listing-10-11/src/main.rs}}
+```
+
+<span class="caption">示例 10-11：方法使用了与结构体定义中不同类型的泛型</span>
+
+在 `main` 函数中，定义了一个有 `i32` 类型的 `x`（其值为 `5`）和 `f64` 的 `y`（其值为 `10.4`）的 `Point`。`p2` 则是一个有着字符串 slice 类型的 `x`（其值为 `"Hello"`）和 `char` 类型的 `y`（其值为`c`）的 `Point`。在 `p1` 上以 `p2` 作为参数调用 `mixup` 会返回一个 `p3`，它会有一个 `i32` 类型的 `x`，因为 `x` 来自 `p1`，并拥有一个 `char` 类型的 `y`，因为 `y` 来自 `p2`。`println!` 会打印出 `p3.x = 5, p3.y = c`。
+
+这个例子的目的是展示一些泛型通过 `impl` 声明而另一些通过方法定义声明的情况。这里泛型参数 `X1` 和 `Y1` 声明于 `impl` 之后，因为它们与结构体定义相对应。而泛型参数 `X2` 和 `Y2` 声明于 `fn mixup` 之后，因为它们只是相对于方法本身的。
+
+### 泛型代码的性能
+
+你可能会好奇，使用泛型类型参数是否会带来运行时开销。好消息是：使用泛型不会让程序比使用具体类型运行得更慢。
+
+Rust 通过在编译时对泛型代码进行**单态化**（*monomorphization*）来实现这一点。单态化就是把泛型代码转换成具体代码的过程，方法是用编译时实际用到的具体类型去填充泛型代码。
+
+在这个过程中，编译器所做的工作正好与示例 10-5 中我们创建泛型函数的步骤相反。编译器寻找所有泛型代码被调用的位置并使用泛型代码针对具体类型生成代码。
+
+让我们看看这在标准库的 `Option<T>` 枚举上是如何工作的：
+
+```rust
+let integer = Some(5);
+let float = Some(5.0);
+```
+
+当 Rust 编译这些代码的时候，它会进行单态化。编译器会读取传递给 `Option<T>` 的值并发现有两种 `Option<T>`：一个对应 `i32` 另一个对应 `f64`。为此，它会将泛型定义 `Option<T>` 展开为两个针对 `i32` 和 `f64` 的定义，接着将泛型定义替换为这两个具体的定义。
+
+编译器生成的单态化版本的代码看起来像这样（编译器会使用不同于如下假想的名字）：
+
+<span class="filename">文件名：src/main.rs</span>
+
+```rust
+enum Option_i32 {
+    Some(i32),
+    None,
+}
+
+enum Option_f64 {
+    Some(f64),
+    None,
+}
+
+fn main() {
+    let integer = Option_i32::Some(5);
+    let float = Option_f64::Some(5.0);
+}
+```
+
+泛型 `Option<T>` 被编译器替换为了具体的定义。因为 Rust 会将每种情况下的泛型代码编译为具体类型，使用泛型没有运行时开销。当代码运行时，它的执行效率就跟好像手写每个具体定义的重复代码一样。这个单态化过程正是 Rust 泛型在运行时极其高效的原因。
+
+{{#quiz ../quizzes/ch10-01-generics.toml}}

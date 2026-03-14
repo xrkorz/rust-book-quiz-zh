@@ -1,0 +1,97 @@
+[[questions]]
+id = "5dcd923f-13a4-4181-b252-4b580547249f"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let x = (0, 1);
+    match x {
+        (_, y) if y == 0 => println!("A"),
+        (0, _) => println!("B"),
+        _ => println!("C")
+    }
+}
+"""
+answer.doesCompile = true
+answer.stdout = "B"
+context = """
+第一个分支匹配 `y = 1`，这意味着 `y != 0`，所以模式匹配失败。
+第二个分支要求 `x == 0`，这是成立的，所以模式匹配成功。
+"""
+
+[[questions]]
+id = "ac0045c7-981a-46cb-baeb-adaa533804ad"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下程序：
+
+```
+let a = [(0, 1)];
+let ?? = a;
+```
+
+以下哪些是可以替换 `??` 占位符的有效模式？
+"""
+answer.answer = [
+    "`_`",
+    "`[(n, ..)]`",
+    "`[..]`"
+]
+prompt.distractors = [
+    "`(_, n)`"
+]
+context = """
+模式 `(_, n)` 无效，因为 `a` 是元组的数组，而不是元组本身。
+"""
+
+[[questions]]
+id = "0b0d90c3-c81b-4b81-9e1b-f8bd58a22c6c"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let x = Some(&[0, 1]);
+    match x {
+        Some(&[.., 1, ..]) => println!("A"),
+        Some(&[0, 1]) | None => println!("B"),
+        _ => println!("C")
+    }
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 4
+context = """
+在一个值的两侧同时使用 `..` 是无效的，因为这会导致歧义，无法确定所指的是哪个数组元素。
+"""
+
+[[questions]]
+id = "a7d38ffa-66b2-472a-90a5-b026b28ad3df"
+type = "MultipleChoice"
+prompt.prompt = """
+假设我们有一个 `Point` 类型，定义如下：
+
+```
+struct Point {
+    x: i32,
+    y: i32
+}
+```
+
+给定以下模式：
+
+```
+Point { x: x @ 0 ..= 5, y } if x + y != 0
+```
+
+以下哪些值会匹配该模式？
+"""
+answer.answer = [
+    "`Point { x: 5, y: -4 }`",
+    "`Point { x: 0, y: 1 }`",
+]
+prompt.distractors = [
+    "`Point { x: -1, y: 2 }`",
+    "`Point { x: 3, y: -3 }`"
+]
+context = """
+该模式指定 `x` 必须在 0 到 5 之间（含端点），且 `x + y != 0`。
+因此 `(5, -4)` 和 `(0, 1)` 有效，而 `(-1, 2)` 和 `(3, -3)` 无效。
+"""

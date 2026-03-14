@@ -1,0 +1,9 @@
+[[questions]]
+id = "d172fc53-0220-4ff4-83c9-9c0a6834dd8e"
+type = "MultipleChoice"
+prompt.prompt = "1 + 1 等于多少？（试着点击一个错误答案。）"
+answer.answer = "2"
+prompt.distractors = [ "0", "-999", "11" ]
+context = """
+详情请参阅《数学原理》（*Principia Mathematica*）对此定理的证明。
+"""

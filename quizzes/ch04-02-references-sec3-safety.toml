@@ -1,0 +1,102 @@
+[[questions]]
+id = "5080616f-6f4c-43f7-aa3a-8b23f2798937"
+type = "Tracing"
+prompt.program = """
+fn incr(n: &mut i32) {
+  *n += 1;
+}
+
+fn main() {
+  let mut n = 1;
+  incr(&n);
+  println!("{n}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 7
+context = """
+尽管 `n` 被标记为 `mut`，但传给 `incr` 的引用也必须标记为 `mut`。
+因此该程序的正确写法应为 `incr(&mut n)`。
+"""
+
+
+[[questions]]
+id = "e9846c5d-1254-4420-9986-dae4af86b9af"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let mut s = String::from("hello");
+  let s2 = &s;
+  let s3 = &mut s;
+  s3.push_str(" world");
+  println!("{s2}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 6
+context = """
+在不可变引用 `s2` 存活期间，对同一值使用可变引用 `s3` 是不合法的。
+"""
+
+[[questions]]
+id = "80f6bcd6-b74a-4da3-a014-d423c82ce405"
+type = "MultipleChoice"
+prompt.prompt = """
+考察以下 Rust 函数，它将一个数字压入向量末尾，然后从向量头部移除并返回该数字：
+
+```
+fn give_and_take(v: &Vec<i32>, n: i32) -> i32 {
+    v.push(n);
+    v.remove(0)
+}
+```
+
+通常情况下，如果你尝试编译此函数，编译器会返回如下错误：
+
+```text
+error[E0596]: cannot borrow `*v` as mutable, as it is behind a `&` reference
+ --> test.rs:2:5
+  |
+1 | fn give_and_take(v: &Vec<i32>, n: i32) -> i32 {
+  |                     --------- help: consider changing this to be a mutable reference: `&mut Vec<i32>`
+2 |     v.push(n);
+  |     ^^^^^^^^^ `v` is a `&` reference, so the data it refers to cannot be borrowed as mutable
+```
+
+假设编译器没有拒绝此函数。从下列程序中选出所有（如有）在执行时可能导致未定义行为的程序。如果没有任何程序会导致未定义行为，则勾选"以下程序均不会"。
+"""
+answer.answer = [
+"""
+```
+let v = vec![1, 2, 3];
+let n = &v[0];
+give_and_take(&v, 4);
+println!("{}", n);
+```
+""",
+]
+prompt.distractors = [
+"""
+```
+let v = vec![1, 2, 3];
+let v2 = &v;
+give_and_take(&v, 4);
+println!("{}", v2[0]);
+```
+""",
+"""
+```
+let v = vec![1, 2, 3];
+let n = &v[0];
+let k = give_and_take(&v, 4);
+println!("{}", k);
+```
+""",
+"以下程序均不会"
+]
+context = """
+正如本节前面所示，`v.push(n)` 可能导致 `v` 重新分配其内部内容，从而使所有指向堆上 `v` 元素的引用失效。
+因此调用 `give_and_take(&v, 4)` 将使之前创建的元素引用指向无效内存。两个在 `give_and_take` 之前绑定了 `let n = &v[0]` 的程序都是未定义行为的候选。`let v2 = &v` 则不是候选，因为对容器 `v` 本身的引用并不会因修改 `v` 而失效。
+
+执行 `println!("{}", n)` 的程序会因读取无效内存而产生未定义行为。执行 `println!("{}", k)` 的程序则不会，因为它没有使用已失效的引用。
+"""

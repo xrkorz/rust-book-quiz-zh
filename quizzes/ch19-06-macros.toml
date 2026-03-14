@@ -1,0 +1,62 @@
+[[questions]]
+id = "8c80f9e8-2d95-43cc-9aa4-04d617dd8cb9"
+type = "Tracing"
+prompt.program = """
+macro_rules! manylet {
+    ( $( $i:ident ),* = $e:expr ) => {
+        $(
+            let mut $i = $e;
+        )*
+    }
+}
+
+fn main() {
+    let mut s = String::from("A");
+    manylet!(x, y = s);
+    x.push_str("B");
+    println!("{x}{y}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 11
+context = """
+`manylet` 宏在语法上将表达式 `e` 复制为等号左侧每个变量的绑定。但是，由于 `s` 是一个拥有所有权的字符串，
+第一次绑定到 `x` 会移动 `s`，而第二次绑定到 `y` 则是无效的。
+"""
+
+[[questions]]
+id = "f4f664ef-4b0b-43ac-ba90-5051a4ef89fb"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪些是将宏实现为过程宏而非声明宏的有效理由？
+"""
+answer.answer = [
+    "你想与 Rust 的派生（derive）系统集成",
+    "你的宏需要对宏用户的语法进行非平凡的分析",
+]
+prompt.distractors = [
+  "你想生成可变长度的代码序列",
+  "你的宏需要整个条目（item）作为输入，而不仅仅是一个表达式"
+]
+context = """
+过程宏是创建自定义派生的唯一方式。当你需要代码来分析宏用户的语法时，过程宏也很有用 &mdash; 声明宏只允许对输入进行重排，而不能例如计算其大小。
+
+声明宏可以生成可变长度的代码序列，并且可以包装/生成条目（item），而不仅仅是表达式。
+"""
+
+[[questions]]
+id = "4c7dce03-99c6-41e3-8482-ccf4e30974ff"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪项最准确地描述了过程宏的输入？
+"""
+answer.answer = "输入是一个 token 序列"
+prompt.distractors = [
+  "输入是一个有类型的控制流图",
+   "输入是一个抽象语法树",
+  "输入是一个字节字符串"
+]
+context = """
+过程宏接受（并产生）token 流作为输入和输出。
+你可以使用 `syn` 等 crate 将 token 转换为语法树。
+"""

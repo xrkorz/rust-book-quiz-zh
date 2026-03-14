@@ -1,0 +1,64 @@
+[[questions]]
+id = "1665d1ef-961f-4451-a988-ec46121531f9"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪个对 `find_until` 函数的调用会导致运行时 panic？
+
+```
+fn find_until(v: &Vec<i32>, n: i32, til: usize) -> Option<usize> {
+  for i in 0 .. til {
+    if v[i] == n {
+      return Some(i);
+    }
+  }
+  return None;
+}
+```
+"""
+answer.answer = "`find_until(&vec![1, 2, 3], 4, 4)`"
+prompt.distractors = [
+  "`find_until(&vec![1, 2, 3], 0, 0)`",
+  "`find_until(&vec![1, 2, 3], 3, 3)`",
+  "`find_until(&vec![1, 2, 3], 1, 4)`"
+]
+context = """
+如果 `til = 4`，对于长度为 3 的向量，for 循环将尝试以 `i = 3` 索引该向量，这超出了边界。
+当 `n = 1` 时，此函数不会 panic，因为它在到达越界索引之前就已返回。
+"""
+
+[[questions]]
+id = "789dfffc-7556-443d-98ab-5d0a4db5c162"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let mut v = Vec::new();
+  let s = String::from("Hello ");
+  v.push(s);
+  v[0].push_str("world");
+  println!("original: {}", s);
+  println!("new: {}", v[0]);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 6
+context = """
+`Vec::push` 会移动其参数，因此在调用 `v.push(s)` 后，`s` 不可再使用。因此调用 `println!("original: {}", s)` 违反了所有权安全规则。
+"""
+
+[[questions]]
+id = "66270f68-3ad6-4e79-8c73-c04d2daf9792"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let v = vec![String::from("Hello ")];
+  let mut s = v[0];
+  s.push_str("world");
+  println!("{s}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 3
+context = """
+不可复制类型无法通过索引从向量中移出。只有 `Vec::remove` 等方法才允许从向量中移出元素。关于原因的更深入解释，请参阅第 4.3 节
+["复制与从集合中移出"](ch04-03-fixing-ownership-errors.html#fixing-an-unsafe-program-copying-vs-moving-out-of-a-collection)。
+"""

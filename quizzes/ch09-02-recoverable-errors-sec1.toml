@@ -1,0 +1,13 @@
+[[questions]]
+id = "8f9e0e79-f4a7-4056-b35e-f7ae65b78888"
+type = "MultipleChoice"
+prompt.prompt = "以下哪个说法最能描述为什么 `File::open` 返回 `Result` 而不是 `Option`？"
+answer.answer = "因为 `Result` 可以表示操作失败的原因，而文件打开可能因多种原因失败"
+prompt.distractors = [
+  "因为 `Result` 表示失败的可能性，而 `Option` 无法表示失败",
+  "因为 `Result` 在运行时使用比 `Option` 更少的字节来表示失败",
+  "因为 `Result` 与底层系统调用的错误表示方式相同"
+]
+context = """
+`Option` 只能表示操作*是否*失败，而 `Result` 可以解释操作*为何*失败。
+"""

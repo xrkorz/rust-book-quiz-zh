@@ -1,0 +1,54 @@
+[[questions]]
+id = "7fbda6e4-dca7-458e-ab52-fab03181f90b"
+type = "MultipleChoice"
+prompt.prompt = """
+考察以下程序中的变量 `s2` 和 `s3`。这两个变量都位于 `main` 的栈帧内存中。每个变量在栈上都有一个内存大小，*不包括*所指向数据的大小。关于 `s2` 和 `s3` 的大小，下列哪项陈述是正确的？
+
+```
+fn main() {
+  let s = String::from("hello");
+  let s2: &String = &s;
+  let s3: &str = &s[..];
+}
+```
+"""
+answer.answer = "`s3` 比 `s2` 占用更多字节"
+prompt.distractors = [
+  "`s3` 与 `s2` 占用相同字节数",
+  "`s3` 比 `s2` 占用更少字节"
+]
+context = """
+`&String` 类型是普通引用，只包含一个指针，在 64 位架构上为 8 字节。`&str` 类型是特殊的切片引用，包含一个指针*和*一个长度，因此为 16 字节。所以 `s3`（类型为 `&str`）比 `s2`（类型为 `&String`）使用更多内存。你可以使用 [`std::mem::size_of`](https://doc.rust-lang.org/std/mem/fn.size_of.html) 自行验证：
+
+```rust
+fn main() {
+  println!(
+    "&String={} &str={}",
+    std::mem::size_of::<&String>(),
+    std::mem::size_of::<&str>(),
+  );
+}
+```
+
+另外请注意，Rust 会根据引用的期望类型，将字符串引用隐式转换为 `&String` 或 `&str`。因此表达式 `&s` 会根据 `&s` 的期望类型产生两种不同的值。
+"""
+
+[[questions]]
+id = "adcfc154-03bd-470a-bacb-b3cad97cfc7f"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let mut s = String::from("hello");
+  for &item in s.as_bytes().iter() {
+    if item == b'l' {
+      s.push_str(" world");
+    }
+  }
+  println!("{s}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 5
+context = """
+因为 `s.as_bytes()` 产生了对 `s` 的不可变引用，所以在 for 循环内部通过 `push_str` 修改 `s` 是不合法的。
+"""

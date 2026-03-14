@@ -1,0 +1,34 @@
+[[questions]]
+id = "6f3c2a68-24f7-439b-9fe0-426abd27e487"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let mut n = 1;
+    let b = Box::new(&mut n);
+    **b += 1;
+    println!("{}", n);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "2"
+context = """
+Box 可以持有可变引用，因此对 `b` 两次解引用可以回到 `n`。
+"""
+
+[[questions]]
+id = "57595a80-c79f-4aae-a1d4-cdaf212d7c21"
+type = "ShortAnswer"
+prompt.prompt = """
+假设程序中有一个变量：
+
+```
+let x: [Box<(usize, usize)>; 4] = /* ... */
+```
+
+对于 64 位架构的编译目标，`x` 在栈上可能占用的最小内存大小（字节数）是多少？
+请用数字作答，例如 0、1，以此类推。
+"""
+answer.answer = "32"
+context = """
+Box 包含一个指针，在 64 位架构上占 8 字节。4 个指针的数组因此至少占用 4 * 8 = 32 字节。
+"""

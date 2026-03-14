@@ -1,0 +1,87 @@
+[[questions]]
+id = "a055fa7c-89e2-467e-8458-62cbf3ffb8bf"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let mut s = String::from("Hello");
+    let mut add_suffix = || s.push_str(" world");
+    println!("{s}");
+    add_suffix();
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 5
+context = """
+`add_suffix` 在其定义到使用之间对 `s` 进行了可变借用，因此 `println`（对 `s` 的读取）是无效的。
+"""
+
+[[questions]]
+id = "266d3cb3-de76-4b91-bd13-c3d6cb9e7fd7"
+type = "Tracing"
+prompt.program = """
+fn main() {
+    let mut s = String::from("Hello");
+    let add_suffix = |s: &mut String| s.push_str(" world");
+    println!("{s}");
+    add_suffix(&mut s);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "Hello"
+context = """
+因为 `add_suffix` 没有捕获 `s`，所以在用 `add_suffix` 修改 `s` 之前读取 `s` 是合法的。
+"""
+
+[[questions]]
+id = "0f298680-d870-47a1-962c-1c668f75cb68"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下 API：
+
+```rust
+/// 用可变引用对向量的每个元素执行一个函数
+fn for_each_mut<T, F: ___(&mut T)>(v: &mut Vec<T>, mut f: F) {
+    for x in v.iter_mut() {
+        f(x);
+    }
+}
+```
+
+以下哪个函数 trait 最适合填入空白处？
+"""
+answer.answer = "`FnMut`"
+prompt.distractors = ["`Fn`", "`FnOnce`"]
+context = """
+`f` 会被调用多次，因此 `FnOnce` 不合适。`Fn` 和 `FnMut` 都可以使用，而 `FnMut` 限制更少，所以 `FnMut` 最为合适。
+"""
+
+
+[[questions]]
+id = "65f574b1-b418-4abe-852e-8b14d88368a7"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下 API：
+
+```rust
+pub struct Analyzer<F> {
+    postprocess: F
+}
+
+impl<F: ___(i32) -> i32> Analyzer<F> {
+    fn process(&self, n: i32) -> i32 { /* .. */ }
+    pub fn pipeline(&self, n: i32) -> i32 {
+        let n = self.process(n);
+        (self.postprocess)(n)
+    }
+}
+```
+
+以下哪个函数 trait 最适合填入空白处？
+"""
+answer.answer = "`Fn`"
+prompt.distractors = ["`FnMut`", "`FnOnce`"]
+context = """
+`pipeline` 可能被调用多次，因此 `FnOnce` 不合适。
+`pipeline` 接受 `self` 的不可变引用，如果 `postprocess` 是 `FnMut`，则无法在 `pipeline` 内部调用它。
+因此，`Fn` 在这里最为合适。
+"""

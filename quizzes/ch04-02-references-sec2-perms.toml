@@ -1,0 +1,84 @@
+[[questions]]
+id = "2e273ac2-6f06-4c19-a831-1d44eed89323"
+type = "MultipleChoice"
+prompt.prompt = """
+考察以下程序中的权限：
+
+```aquascope,permissions,stepper
+#fn main() {
+let mut s = String::from("Hello");
+let t = &mut s;
+/* here */
+t.push_str(" world");
+println!("{}", s);
+#}
+```
+
+在标记 `/* here */` 处，路径 `s` 拥有哪些权限？请在下面选择每一项适用的权限，如果该路径没有任何权限，则选择"无权限"。
+"""
+answer.answer = ["无权限"]
+prompt.distractors = ["R", "W", "O"]
+prompt.answerIndex = 3
+context = """
+可变借用 `t = &mut s` 在 `t` 存活期间，会移除 `s` 上的所有权限。
+"""
+
+[[questions]]
+id = "b431f43e-9a6f-4715-ae88-8896fca6ff3b"
+type = "MultipleChoice"
+prompt.prompt = """
+考察以下程序中的权限：
+
+```aquascope,permissions,stepper,boundaries
+fn get_first(v: &Vec<String>) -> &String {
+    &v[0]
+}
+
+fn main() {
+    let mut strs = vec![
+        String::from("A"), String::from("B")
+    ];
+    let first = get_first(&strs);
+    if first.len() > 0 {
+        strs.push(String::from("C"));
+    }
+}
+```
+
+下列哪项最好地解释了 `strs` 为何会失去并重新获得写权限？
+"""
+answer.answer = "`get_first` 返回了指向 `strs` 内部数据的不可变引用，因此在 `first` 存活期间 `strs` 不可写"
+prompt.distractors = [
+  "在传递给 `get_first` 的不可变引用 `&strs` 存活期间，`strs` 不可写",
+  "`strs` 直到 `strs.push(..)` 操作时才需要写权限，因此它只在该语句处重新获得写权限",
+  "因为 `first` 引用了 `strs`，所以 `strs` 只能在像 if 语句这样的嵌套作用域内被修改"
+]
+context = """
+当 `get_first` 被调用时，Rust 识别到返回的字符串 `first` 可能指向 `strs` 内部的数据，因此 `strs` 失去写权限。一旦 `first` 变量不再被使用（在 if 条件之后），`strs` 便重新获得写权限。
+"""
+
+[[questions]]
+id = "652e596c-7cc9-42e6-a7f8-701879cd9a2b"
+type = "MultipleChoice"
+prompt.prompt = """
+考察这个不安全的程序：
+```aquascope,interpreter,shouldFail
+#fn main() {
+let v1 = vec![1, 2, 3];
+let mut v2 = v1;
+v2.push(4);
+println!("{}", v1[0]);`[]`
+#}
+```
+
+下列哪项最好地描述了该程序中发生未定义行为的时间点？
+"""
+answer.answer = "`v1[0]` 读取了 `v1`，而 `v1` 指向已被释放的内存"
+prompt.distractors = [
+  "`v2` 拥有堆上的向量数据，而 `v1` 没有",
+  "`v1` 在第 2 行被移动到了 `v2`",
+  "`v1` 的指针因第 3 行的 `push` 而失效"
+]
+context = """
+未定义行为的产生是因为 `v1` 在被释放后仍被读取。注意，另外三个选项都是关于该程序的正确陈述，但它们并不能解释未定义行为实际发生的原因。例如，如果删去 `println`，那么其他三个选项仍然成立，但程序将不再有未定义行为。
+"""

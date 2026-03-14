@@ -1,0 +1,47 @@
+[[questions]]
+id = "ceb96826-6c98-40e1-bff4-0bb61f35679d"
+type = "MultipleChoice"
+prompt.prompt = """
+在某些并发 API 中，互斥锁与它所保护的数据是分离的。例如，想象一个假设的 Mutex API 如下：
+
+```
+let mut data = Vec::new();
+let mx: Mutex = Mutex::new();
+{
+    let _guard = mx.lock();
+    data.push(0);
+}
+```
+
+以下哪项最准确地描述了 Rust 使用 `Mutex<T>` 而非单纯 `Mutex` 的原因？
+"""
+answer.answer = "防止在不锁定互斥锁的情况下访问其数据"
+prompt.distractors = [
+    "减少调用互斥锁方法的次数",
+    "提高使用互斥锁的并发程序的效率",
+    "防止互斥锁的数据在线程间移动"
+]
+context = """
+`Mutex<T>` 的设计确保互斥锁的数据只能在锁定互斥锁时才能访问，反之，一旦数据不再可访问，互斥锁也会被解锁。
+"""
+
+[[questions]]
+id = "e5ac0c92-4694-4647-bd20-67825fe038b7"
+type = "Tracing"
+prompt.program = """
+use std::{sync::Arc, thread};
+
+fn main() {
+    let s = String::from("Hello world");
+    let a = Arc::new(&s);
+    let a2 = Arc::clone(&a);
+    let t = thread::spawn(move || a2.len());
+    let len = t.join().unwrap();
+    println!("{} {}", a, len);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 7
+context = """
+如果 `Arc` 的数据包含引用，使用 `Arc` 仍然不安全，因为在理论上，该引用可能在所有包含该 `Arc` 的线程执行完毕之前就失效了。
+"""

@@ -1,0 +1,64 @@
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = "给定一个 future `f`，以下哪项最准确地描述了 `f.await` 的工作原理？"
+prompt.distractors = [
+  "它调用 `f.poll()` 一次，就地阻塞直到 `f` 就绪",
+  "它在循环中调用 `f.poll()`，若 `f` 就绪则退出，若 `f` 未就绪则立即再次轮询",
+  "它调用 `f.push(...)` 一次，当 `f` 就绪后执行一个包含 `f.await` 之后剩余代码的回调"
+]
+answer.answer = "它在循环中调用 `f.poll()`，若 `f` 就绪则退出，若 `f` 未就绪则将控制权归还给异步运行时"
+context = """
+Rust 使用基于轮询的模型来执行 future。await 点会脱糖为一个循环，该循环反复调用 `.poll()`，
+并在每次轮询失败后将控制权让给异步运行时，以允许其他异步代码运行。运行时随后可以
+"唤醒" `f.await` 的代码再次轮询 `f`。
+"""
+id = "c4d90f3c-7286-4272-921c-241b266e9f91"
+
+[[questions]]
+type = "MultipleChoice"
+prompt.prompt = """
+假设 Rust 不要求 future 在被轮询之前必须被固定（pinned）。
+以下哪个异步函数在未被固定的情况下可能引发未定义行为？
+"""
+prompt.distractors = [
+"""
+```rust
+async fn example(x: &i32) -> i32 {
+    sleep(Duration::from_secs(1)).await;
+    *y
+}
+```
+""",
+"""
+```rust
+async fn example(x: Vec<i32>) -> i32 {
+    sleep(Duration::from_secs(1)).await;
+    x[0]
+}
+```
+""",
+"""
+```rust
+async fn example() -> i32 {
+    let x = 0;
+    sleep(Duration::from_secs(1)).await;
+    x
+}
+```
+""",
+]
+answer.answer = """
+```rust
+async fn example(x: i32) -> i32 {
+    let y = &x;
+    sleep(Duration::from_secs(1)).await;
+    *y
+}
+```
+"""
+context = """
+固定（pinning）所解决的核心问题是自引用，即一个包含指向自身指针的 future。
+当 async 块中有一个局部变量引用该 future 中的另一个局部变量时就会发生这种情况。
+这里就是 `y = &x`。
+"""
+id = "bc8b4acb-d111-4fec-b89a-e5d1bc77c8f2"

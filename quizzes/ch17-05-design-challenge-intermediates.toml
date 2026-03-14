@@ -1,0 +1,107 @@
+[multipart]
+q = """
+**背景：** 你正在设计一个序列化库，它将 Rust 数据类型转换为 JSON 等格式。
+
+**功能：** 一个 `Serialize` trait，可由可序列化类型实现；以及一个 `to_json` 函数，将可序列化类型转换为 JSON。
+
+**设计方案：** 以下是几种实现该功能的设计方案。
+
+```
+// Option 1: types serialize to a `Value` enum
+pub enum Value {
+	String(String),
+	Number(isize)
+}
+
+pub trait Serialize {
+	fn serialize(&self) -> Value;
+}
+
+fn value_to_json(value: Value) -> String {
+	/* .. */
+}
+
+pub fn to_json(data: impl Serialize) -> String {
+    let value = data.serialize();
+    value_to_json(value)
+}
+
+
+// Option 2: types serialize via calls to a `Serializer` interface
+pub trait Serialize {
+	fn serialize<S: Serializer>(&self, serializer: &mut S);
+}
+
+pub trait Serializer {
+	fn serialize_string(&mut self, s: &str);
+	fn serialize_number(&mut self, n: isize);
+}
+
+struct JsonSerializer { buffer: String };
+impl Serializer for JsonSerializer {
+	/* .. */
+}
+
+pub fn to_json(data: impl Serialize) -> String {
+	let mut serializer = JsonSerializer { buffer: String::new() };
+	data.serialize(&mut serializer);
+	serializer.buffer
+}
+```
+"""
+
+[[questions]]
+type = "MultipleChoice"
+multipart = "q"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** 应当可以添加新的数据格式，而无需修改现有 `Serialize` trait 实现中的代码。
+"""
+prompt.distractors = []
+prompt.sortAnswers = true
+answer.answer = ["1", "2"]
+context = """
+两种设计都足够解耦，使得每种新数据格式都独立于任何 `Serialize` 实现。对于方案 1，
+每种数据格式将 `Value` 转换为该格式的表示形式，`Value` 充当模块边界。
+
+对于方案 2，不存在显式的序列化值中间表示，而是每个 `Serialize` 实现对任意选择的、
+实现了 `Serializer` 的 `S` 都是显式泛型的。
+"""
+id = "66e036c9-91a0-4611-8110-967b5ed1a514"
+
+[[questions]]
+type = "MultipleChoice"
+multipart = "q"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** 序列化过程应尽可能少地消耗内存。
+"""
+prompt.distractors = ["1"]
+prompt.sortAnswers = true
+answer.answer = ["2"]
+context = """
+方案 1 通过先将数据结构转换为中间表示 `Value`，再将 `Value` 转换为最终格式来序列化数据。
+这个中间数据结构会消耗额外内存，而方案 2 不需要这些内存，因为数据直接转换为最终格式。
+"""
+id = "eaa95520-1b72-4f7d-a600-5444b6368785"
+
+
+[[questions]]
+multipart = "q"
+type = "MultipleChoice"
+prompt.prompt = """
+选出满足以下需求的每个设计方案：
+
+**需求：** 当同一数据类型被序列化为多种格式时，应尽可能少地增加编译后二进制文件的大小。
+"""
+prompt.distractors = ["2"]
+prompt.sortAnswers = true
+answer.answer = ["1"]
+context = """
+对于方案 1，只有一个 `Serialize` 实例化，它将类型 `T` 转换为 `Value`。由于方案 2 对序列化器 `S` 是泛型的，
+每次以新的 `S` 调用 `T::serialize` 时，Rust 编译器都会单态化一个新的 `T::serialize` 实例，
+这会使二进制文件的大小比方案 1 更大。
+"""
+id = "2751731e-7d18-46a1-aaea-b5734bf51c80"

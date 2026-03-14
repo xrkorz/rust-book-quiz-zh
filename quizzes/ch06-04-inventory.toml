@@ -1,0 +1,328 @@
+[[questions]]
+id = "6e5e193e-579d-4a46-aae4-d35336b77b68"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// 生成用于分隔文本行的字符串，
+/// 如果提供的字符串为空则返回默认值
+fn make_separator(user_str: &str) -> &str {
+    if user_str == "" {
+        let default = "=".repeat(10);
+        &default
+    } else {
+        user_str
+    }
+}
+```
+
+如果你尝试编译这个函数，以下哪项最能描述你会遇到的编译器错误？
+"""
+answer.answer = "cannot return reference to local variable `default`"
+prompt.distractors = [
+  "`user_str` does not live long enough",
+  "function `make_separator` cannot return a reference of type `&str`",
+  "function `make_separator` cannot return two different references"
+]
+context = """
+因为 `default` 存在于 `make_separator` 的栈上，一旦 `make_separator` 调用结束，它就会被释放。
+这会使 `&default` 指向已释放的内存。因此 Rust 会报错，说你不能返回局部变量的引用。
+"""
+
+[[questions]]
+id = "44a2eb01-b49a-497b-a9d2-207814d1db1e"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// 生成用于分隔文本行的字符串，
+/// 如果提供的字符串为空则返回默认值
+fn make_separator(user_str: &str) -> &str {
+    if user_str == "" {
+        let default = "=".repeat(10);
+        &default
+    } else {
+        user_str
+    }
+}
+```
+
+通常情况下，如果你尝试编译这个函数，编译器会返回以下错误：
+
+```text
+error[E0515]: cannot return reference to local variable `default`
+ --> test.rs:6:9
+  |
+6 |         &default
+  |         ^^^^^^^^ returns a reference to data owned by the current function
+```
+
+假设编译器**没有**拒绝这个函数。以下哪些程序会（1）通过编译器，且（2）执行时可能导致未定义行为？
+勾选满足这两个条件的程序，如果都不满足则勾选"以上程序均不满足"。
+"""
+answer.answer = ["""
+```
+let s = make_separator("");
+println!("{s}");
+```
+"""]
+prompt.distractors = [
+"""
+```
+println!("{}", make_separator("Hello world!"));
+```
+""",
+"以上程序均不满足",
+]
+context = """
+调用者必须传入空字符串才能触发有问题的 if 分支。这会返回一个悬空指针。
+"""
+
+[[questions]]
+id = "815ae4cd-0f23-4da5-9dc2-0e81c664cc28"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 1：**
+
+```ide
+/// 生成用于分隔文本行的字符串，
+/// 如果提供的字符串为空则返回默认值
+fn make_separator(user_str: &str) -> &str {
+    if user_str == "" {
+        let default = "=".repeat(10);
+        &default
+    } else {
+        user_str
+    }
+}
+```
+
+在以下修复方案（用黄色高亮显示）中，哪个方案最符合以下三个标准：
+1. 修复后的函数能通过 Rust 编译器，
+2. 修复后的函数保留了原始代码的意图，
+3. 修复后的函数不引入不必要的性能损耗
+"""
+answer.answer = """
+```ide
+fn make_separator(user_str: &str) -> `[String]` {
+    if user_str == "" {
+        let default = "=".repeat(10);
+        `[default]`
+    } else {
+        `[user_str.to_string()]`
+    }
+}
+```
+"""
+prompt.distractors = [
+"""
+```ide
+fn make_separator(user_str: &str) -> &str {
+    if user_str == "" {
+        let default = "=".repeat(10);
+        &default
+    } else {
+        `[&user_str]`
+    }
+}
+```
+""",
+"""
+```ide
+fn make_separator(user_str: `[String]`) -> `[String]` {
+    if user_str == "" {
+        let default = "=".repeat(10);
+        `[default]`
+    } else {
+        user_str
+    }
+}
+```
+""",
+]
+context = """
+没有有效的方法可以返回指向栈上分配变量的指针。因此简单的解决方案是将返回类型改为 `String`，
+并将输入 `user_str` 复制为拥有所有权的字符串。然而，要求 `user_str` 为 `String` 会降低 API 的灵活性，
+例如调用者无法对更大字符串的子串调用 `make_separator`，也必须在堆上分配字符串，
+无法使用字符串字面量如 `make_separator("Rust")`。
+
+该问题最符合惯用法的解决方案使用了一种你还未见过的构造：[`Cow`](https://doc.rust-lang.org/std/borrow/enum.Cow.html)。
+写时克隆智能指针可以让该函数在没有类型错误的情况下返回*拥有所有权的字符串*或*字符串引用*。
+"""
+
+[[questions]]
+id = "1f4e5c06-ecdf-481d-9cae-8a25dafe9cfd"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+/// 如果 option 中存在字符串则取出，
+/// 否则返回默认值
+fn get_or_default(arg: &Option<String>) -> String {
+    if arg.is_none() {
+        return String::new();
+    }
+    let s = arg.unwrap();
+    s.clone()
+}
+```
+
+如果你尝试编译这个函数，以下哪项最能描述你会遇到的编译器错误？
+"""
+answer.answer = "cannot move out of `arg` in `arg.unwrap()`"
+prompt.distractors = [
+  "cannot call `arg.is_none()` without dereferencing `arg`",
+  "`arg` does not live long enough",
+  "cannot return `s.clone()` which does not live long enough"
+]
+context = """
+函数 `Option::unwrap` 期望 `self`，即需要 `arg` 的所有权。然而 `arg` 是对 option 的不可变引用，
+无法提供该 option 的所有权。因此编译器报错，说我们无法通过 `unwrap` 移出 `arg`。
+"""
+
+
+[[questions]]
+id = "989670b2-b038-47c4-9975-a93d6ee193e5"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+/// 如果 option 中存在字符串则取出，
+/// 否则返回默认值
+fn get_or_default(arg: &Option<String>) -> String {
+    if arg.is_none() {
+        return String::new();
+    }
+    let s = arg.unwrap();
+    s.clone()
+}
+```
+
+通常情况下，如果你尝试编译这个函数，编译器会返回以下错误：
+
+```text
+error[E0507]: cannot move out of `*arg` which is behind a shared reference
+   --> test.rs:7:13
+    |
+7   |     let s = arg.unwrap();
+    |             ^^^^--------
+    |             |   |
+    |             |   `*arg` moved due to this method call
+    |             help: consider calling `.as_ref()` or `.as_mut()` to borrow the type's contents
+    |             move occurs because `*arg` has type `Option<String>`, which does not implement the `Copy` trait
+```
+
+假设编译器**没有**拒绝这个函数。以下哪些程序会（1）通过编译器，且（2）执行时可能导致未定义行为？
+勾选满足这两个条件的程序，如果都不满足则勾选"以上程序均不满足"。
+"""
+answer.answer = [
+"""
+```
+let opt = Some(String::from("Rust"));
+get_or_default(&opt);
+println!("{:?}", opt);
+```
+""",
+"""
+```
+let opt = Some(String::from("Rust"));
+let s = get_or_default(&opt);
+println!("{}", s);
+```
+""",
+"""
+```
+let opt = Some(String::from("Rust"));
+get_or_default(&opt);
+```
+""",
+]
+prompt.distractors = [
+"以上程序均不满足",
+]
+context = """
+所有这些程序都因双重释放而违反内存安全。如果允许 `arg.unwrap()`，那么字符串 `String::from("Rust")` 的所有权
+将被 `s` 获取。`get_or_default` 返回后，该字符串会被释放。然而 `opt` 也认为自己拥有该字符串，
+因此字符串会被再次释放。
+"""
+
+[[questions]]
+id = "3a8d5bb8-a204-43e6-b50a-d17c803dbe37"
+type = "MultipleChoice"
+prompt.prompt = """
+**程序 2：**
+
+```ide
+/// 如果 option 中存在字符串则取出，
+/// 否则返回默认值
+fn get_or_default(arg: &Option<String>) -> String {
+    if arg.is_none() {
+        return String::new();
+    }
+    let s = arg.unwrap();
+    s.clone()
+}
+```
+
+在以下修复方案（用黄色高亮显示）中，哪个方案最符合以下三个标准：
+1. 修复后的函数能通过 Rust 编译器，
+2. 修复后的函数保留了原始代码的意图，
+3. 修复后的函数不引入不必要的性能损耗
+"""
+answer.answer = """
+```ide
+fn get_or_default(arg: &Option<String>) -> String {
+    `[match arg {]`
+        `[None => String::new(),]`
+        `[Some(s) => s.clone()]`
+    `[}]`
+}
+```
+"""
+prompt.distractors = [
+"""
+```ide
+fn get_or_default(arg: `[&mut Option<String>]`) -> String {
+    if arg.is_none() {
+        return String::new();
+    }
+    let s = arg`[.as_mut()]`.unwrap();
+    s.clone()
+}
+```
+""",
+"""
+```ide
+fn get_or_default(arg: `[Option<String>]`) -> String {
+    if arg.is_none() {
+        return String::new();
+    }
+    let s = arg.unwrap();
+    s.clone()
+}
+```
+""",
+"""
+```ide
+fn get_or_default(arg: &Option<`[&str]`>) -> String {
+    if arg.is_none() {
+        return String::new();
+    }
+    let s = arg.unwrap();
+    `[s.to_string()]`
+}
+```
+""",
+]
+context = """
+`is_none` 和 `unwrap` 的组合在 Rust 中是反模式，因为 `match` 将二者的功能合而为一，
+并自动将引用 `&Option` 推入内部以产生 `&String`。因此 `match` 方案最符合惯用法，
+且无需更改函数的预期类型签名即可通过编译器。
+
+将 `&Option` 改为 `Option` 的方案不可取，因为它要求调用者提供 option 的所有权，
+这是更为严格的 API 限制。
+"""

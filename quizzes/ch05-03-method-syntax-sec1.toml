@@ -1,0 +1,35 @@
+[[questions]]
+id = "ae4e06f6-5fdc-43d9-929c-85eba3559a82"
+type = "MultipleChoice"
+prompt.prompt = "Rust 中构造函数的关键字是什么？"
+answer.answer = "以上均不是"
+prompt.distractors = [
+  "`constructor`",
+  "`new`",
+  "所构造类型的名称",
+]
+prompt.answerIndex = 3
+context = """
+Rust 没有专门用于构造函数的关键字。惯用的做法是定义一个名为 `new` 的关联函数作为构造函数，但这并非语言强制要求。
+"""
+
+[[questions]]
+id = "a506f97d-2b51-4517-bc4d-f69764093c71"
+type = "Tracing"
+prompt.program = """
+struct Point(i32, i32);
+fn main() {
+  let p = Point(1, 2);
+
+  impl p {
+    fn x(&self) -> i32 { self.0 }
+  }
+
+  println!("{}", p.x());
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 5
+context = """
+方法只能为类型实现（如 `impl Point`），而不能为变量（如 `p`）实现。
+"""

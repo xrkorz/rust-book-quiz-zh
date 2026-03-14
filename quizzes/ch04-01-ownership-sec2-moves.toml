@@ -1,0 +1,118 @@
+[[questions]]
+id = "889ca9ac-0f4b-4abf-82c4-be9cd4d4f7ad"
+type = "MultipleChoice"
+prompt.prompt = "以下哪项**不是**未定义行为？"
+answer.answer = "在栈帧中持有指向已释放内存的指针"
+prompt.distractors = [
+  "使用指向已释放内存的指针",
+  "对同一块内存进行二次释放",
+  "将非布尔值用作 `if` 条件"
+]
+context = """
+在栈帧中持有指向已释放内存的指针是完全安全的。
+重要的是不要再次*使用*该指针，例如读取它或释放它。
+"""
+
+[[questions]]
+id = "94425a4e-043e-47f8-9fba-c5b09fb60aa3"
+type = "Tracing"
+prompt.program = """
+fn add_suffix(mut s: String) -> String {
+  s.push_str(" world");
+  s
+}
+
+fn main() {
+  let s = String::from("hello");
+  let s2 = add_suffix(s);
+  println!("{}", s2);
+}
+"""
+answer.doesCompile = true
+answer.stdout = "hello world"
+context = """
+该程序有效，因为 `s` 被移动到 `add_suffix` 后没有再被使用。
+"""
+
+[[questions]]
+id = "c00e3638-861b-4f9e-a55c-bfb67af79280"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let s = String::from("hello");
+  let s2;
+  let b = false;
+  if b {
+    s2 = s;
+  }
+  println!("{}", s);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 8
+context = """
+由于 `s` 可能在 if 语句内被移动，因此在第 8 行使用它是非法的。
+虽然在本程序中 `b` 始终为 `false` 导致 if 语句永远不会执行，
+但 Rust 通常不会尝试判断 if 语句是否会执行。Rust 只是
+假设它*可能*被执行，因此 `s` *可能*被移动。
+"""
+
+[[questions]]
+id = "f7d67c11-60bb-4d92-8cc2-8ce82cf4c974"
+type = "MultipleChoice"
+prompt.prompt = """
+假设我们有一个移动 box 的函数，如下所示：
+```
+fn move_a_box(b: Box<i32>) {
+  // This space intentionally left blank
+}
+```
+
+下面四段代码均被 Rust 编译器拒绝。
+想象 Rust 允许这些代码编译并运行。
+选出会导致未定义行为的代码片段，若均不会导致未定义行为，
+则选"以上代码片段均不会"。
+"""
+answer.answer = [
+"""
+```
+let b = Box::new(0);
+let b2 = b;
+move_a_box(b);
+```
+""",
+"""
+```
+let b = Box::new(0);
+move_a_box(b);
+println!("{}", b);
+```
+""",
+"""
+```
+let b = Box::new(0);
+move_a_box(b);
+let b2 = b;
+```
+"""
+]
+prompt.distractors = [
+"""
+```
+let b = Box::new(0);
+let b2 = b;
+println!("{}", b);
+move_a_box(b2);
+```
+""",
+"以上代码片段均不会"
+]
+context = """
+关键在于：当 box 被传入 `move_a_box` 时，其内存会在 `move_a_box` 结束后被释放。
+因此：
+* 在 `move_a_box` 之后通过 `println` 读取 `b` 是未定义行为，因为它读取了已释放的内存。
+* 给 `b` 增加第二个所有者是未定义行为，因为这会导致 Rust 代表 `b2` 再次释放该 box。无论 `let b2 = b` 绑定发生在 `move_a_box` 之前还是之后，情况都一样。
+
+然而，先执行 `let b2 = b` 再执行 `println` 并不是未定义行为。虽然 `b` 被移动了，但其数据直到最后调用 `move_a_box` 时才被释放。因此
+该程序在技术上是安全的，尽管仍会被 Rust 拒绝。
+"""

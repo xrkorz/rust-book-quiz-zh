@@ -1,0 +1,42 @@
+[[questions]]
+id = "e582f00a-2f28-46e4-ae1b-77fd223cca4f"
+type = "MultipleChoice"
+prompt.prompt = "类型 `i128` 能表示的最大数为："
+answer.answer = "2<sup>127</sup> - 1"
+prompt.distractors = [
+  "2<sup>128</sup>",
+  "2<sup>128</sup> - 1",
+  "2<sup>127</sup>",
+]
+prompt.answerIndex = 3
+context = """
+一般来说，一个有符号的 *n* 位整数能表示的数范围为 -(2<sup>n - 1</sup>) 到 2<sup>n - 1</sup> - 1。
+"""
+
+[[questions]]
+id = "3a92246b-a43c-4658-980b-335d7632ddcb"
+type = "MultipleChoice"
+prompt.prompt = "若 `x : u8 = 0`，计算 `x - 1` 时会发生什么？"
+answer.answer = "取决于编译器模式。"
+prompt.distractors = [
+  "始终 panic。",
+  "始终返回 255。",
+]
+context = """
+该表达式在 debug 模式下会 panic，在 release 模式下会返回 255。
+"""
+
+[[questions]]
+id = "9bcac1a1-d2df-4a51-b399-7fd8a6042cc2"
+type = "Tracing"
+prompt.program = """
+fn main() {
+  let x: fsize = 2.0;
+  println!("{x}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 2
+context = """
+类型 `fsize` 不存在。浮点数必须是 `f32` 或 `f64`。
+"""

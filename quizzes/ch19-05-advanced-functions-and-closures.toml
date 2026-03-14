@@ -1,0 +1,21 @@
+[[questions]]
+id = "f08ab588-1dca-438e-8108-a1b2410a4343"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以两种方式实现一个接受回调的 `register` 函数：
+
+```
+fn register1(cb: fn(Event) -> ());
+fn register2<F>(cb: F) where F: Fn(Event) -> ();
+```
+
+哪个类型签名允许 `register` 接受最广泛的参数？
+"""
+answer.answer = "`register2`"
+prompt.distractors = [
+  "`register1`",
+  "它们是等价的"
+]
+context = """
+带有环境的闭包可以传递给 `register2`，而只有顶层函数（或没有环境的闭包）才能传递给 `register1`。
+"""

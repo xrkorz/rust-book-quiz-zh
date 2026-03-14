@@ -1,0 +1,38 @@
+[[questions]]
+id = "87c3b09e-84d3-49d7-8680-0b2d068a7fc5"
+type = "ShortAnswer"
+prompt.prompt = "每个可执行的 Rust 程序都必须包含一个名为以下名称的函数："
+answer.answer = "main"
+context = """
+在你的程序中，像这样添加一个 main 函数：
+
+```
+fn main() {
+  // your code here
+}
+```
+"""
+
+[[questions]]
+id = "0d78d302-eb3d-4ac7-a1ac-f2d661810744"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你在文件 `hello.rs` 中有以下程序：
+
+```
+fn main() {
+  println!("Hello world!");
+}
+```
+
+然后你在命令行运行 `rustc hello.rs`。以下哪个描述最准确地说明接下来会发生什么？
+"""
+answer.answer = "`rustc` 生成一个名为 `hello` 的二进制可执行文件"
+prompt.distractors = [
+  "`rustc` 会打印错误，因为这是一个无效的程序",
+  "`rustc` 执行程序并打印出 `Hello world!`",
+  "`rustc` 按照 Rust 风格指南重新格式化 `hello.rs`"
+]
+context = """
+运行 `rustc` 会检查并编译你的程序，但不会执行它。
+"""

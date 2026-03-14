@@ -1,0 +1,223 @@
+[[questions]]
+id = "1ec0098c-c5dc-46de-a889-b6659c0af757"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在编写一个具有以下规格的函数：
+
+> `round_all` 接受一个浮点数列表作为输入，并将每个数字原地舍入到最近的整数。
+
+下列哪项是实现该规格的函数最合适的类型签名？
+"""
+answer.answer = """
+```
+fn round_all(v: &mut Vec<f32>);
+```
+"""
+prompt.distractors = [
+"""
+```
+fn round_all(v: &Vec<f32>) -> Vec<f32>;
+```
+""",
+"""
+```
+fn round_all(v: Vec<f32>);
+```
+""",
+"""
+```
+fn round_all(v: &Vec<f32>);
+```
+"""
+]
+context = """
+该规格要求原地修改输入，因此最合适的类型签名应接受一个对输入的可变引用。
+不可变引用或获取向量所有权对于该规格而言都是不恰当的。
+"""
+
+[[questions]]
+id = "f8ca5ab2-0e5d-4c0d-bca2-99e6763ba9c5"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在编写一个具有以下规格的函数：
+
+> `find_contains` 接受一个字符串集合和一个目标子串作为输入。
+> 它返回集合中所有包含目标子串的字符串列表。
+
+下列哪项是实现该规格的函数最合适的类型签名？
+"""
+answer.answer = """
+```
+fn find_contains(haystack: &[String], needle: &str) -> Vec<&String>;
+```
+"""
+prompt.distractors = [
+"""
+```
+fn find_contains(haystack: &Vec<String>, needle: String) -> Vec<String>;
+```
+""",
+"""
+```
+fn find_contains(haystack: &[String], needle: &str) -> Vec<String>;
+```
+""",
+"""
+```
+fn find_contains(haystack: &Vec<String>, needle: &str) -> &[String];
+```
+"""
+]
+context = """
+对于 `haystack`，切片类型 `&[String]` 比 `&Vec<String>` 能接受更多种类的输入，因此更优。
+对于 `needle`，目标子串不需要在堆上分配，所以 `&str` 优于 `String`。
+对于返回类型，`Vec<String>` 不理想，因为它需要克隆输入字符串。
+`&[String]` 不理想，因为它只能返回输入的连续子序列。
+`Vec<&String>` 最为合适，因为它只承担分配向量的开销，而不需要复制字符串本身。
+"""
+
+[[questions]]
+id = "868a4edf-16f0-4191-8aed-835c812b8b25"
+type = "MultipleChoice"
+prompt.prompt = """
+Rust 通常不允许对同一数组进行多个可变访问，即使这些访问是不相交的。
+例如，以下函数无法编译：
+
+```
+fn main() {
+  let mut v = vec![0, 1, 2, 3];
+  let (r0, r1) = (&mut v[0..2], &mut v[2..4]);
+  r0[0] += 1;
+  r1[0] += 1;
+}
+```
+
+然而，Rust 标准库提供了 `slice::split_at_mut` 函数，它确实允许这种功能：
+
+```
+fn main() {
+  let mut v = vec![0, 1, 2, 3];
+  let (r0, r1) = v.split_at_mut(2);
+  r0[0] += 1;
+  r1[0] += 1;
+}
+```
+
+下列哪项最好地描述了 `split_at_mut` 得以实现的原因？
+"""
+answer.answer = "`split_at_mut` 使用 unsafe 代码，通过原始指针绕过借用检查器"
+prompt.distractors = [
+"`split_at_mut` 是一个特殊的编译器原语，无法在语言内部实现",
+"`split_at_mut` 使用 unsafe 代码来禁用借用检查器对可变引用安全性的检查",
+"`split_at_mut` 调用了 C 语言库，该库无法被 Rust 分析"
+]
+context = """
+正如 [第 4.3 节"修复安全程序：修改不同的数组元素"](ch04-03-fixing-ownership-errors.html#fixing-a-safe-program-mutating-different-array-elements) 中所讨论的，`split_at_mut` 等函数是通过 `unsafe` 特性实现的。
+该特性并不会完全禁用借用检查器，而是允许使用特定的不安全特性，例如原始指针。
+"""
+
+
+[[questions]]
+id = "ba32e57a-e5f2-42e4-8cfd-eb265990c690"
+type = "MultipleChoice"
+prompt.prompt = """
+考察以下程序中的权限：
+
+```aquascope,permissions,boundaries,stepper
+#fn main() {
+let s = String::new();
+let s_ref = &s;`(focus,paths:*s_ref)`
+#println!("{s_ref}");
+#}
+```
+
+下列哪项最好地解释了 `*s_ref` 为何没有 @Perm{own}（own）权限？
+"""
+answer.answer = "所有权允许移动，而从引用中移动数据会导致双重释放"
+prompt.distractors = [
+  "所有权允许借用，而对 `*s_ref` 重新借用会导致双重释放",
+  "所有权允许修改，而修改 `*s_ref` 会导致释放后使用",
+  "所有权允许读取，而读取 `*s_ref` 会导致释放后使用"
+]
+context = """
+@Perm{own} 权限代表对一个对象的所有权。一个对象只能有一个所有者，因此引用不能转移非可复制类型（如 `String`）的所有权，这一点至关重要。如果两个变量都认为自己拥有同一个字符串，它们就会都尝试释放它，从而导致双重释放。
+"""
+
+[[questions]]
+id = "3a5f5de5-23a9-49fb-bdb4-acc9c3fbb4a6"
+type = "MultipleChoice"
+prompt.prompt = """
+考察所有不包含 `unsafe` 代码的 Rust 程序集合。
+从下列陈述中选出所有关于借用检查器接受与拒绝程序类型的正确陈述：
+"""
+answer.answer = [
+  "借用检查器始终拒绝存在未定义行为的程序",
+  "借用检查器有时会拒绝没有未定义行为的程序",
+]
+prompt.distractors = [
+  "借用检查器始终接受没有未定义行为的程序",
+  "借用检查器有时会接受存在未定义行为的程序"
+]
+context = """
+借用检查器始终拒绝存在未定义行为的程序，但有时会拒绝没有未定义行为的程序（即完全安全的程序）。
+用技术术语来说，借用检查器是一种健全但不完备的分析。
+"""
+
+
+[[questions]]
+id = "208e0e38-a706-4d96-9809-f0e12f574136"
+type = "MultipleChoice"
+prompt.prompt = """
+函数 `extract` 被借用检查器拒绝：
+
+```rust
+fn extract(b: &Box<i32>) -> i32 {
+    let b2: Box<i32> = *b;
+    *b2
+}
+```
+
+假设借用检查器没有拒绝此函数。
+请判断是否存在某个输入，使得该函数在该输入上执行时会产生未定义行为。
+"""
+answer.answer = "此函数可能导致未定义行为"
+prompt.distractors = ["此函数不可能导致未定义行为"]
+context = """
+该函数对任何输入都会导致双重释放。
+"""
+
+
+[[questions]]
+id = "dcfd54f8-7fe6-4483-aefd-ea95ba5b5eb0"
+type = "MultipleChoice"
+prompt.prompt = """
+函数 `transfer_string` 被借用检查器拒绝：
+
+```rust
+fn get_first(strs: &mut (String, String)) -> &mut String {
+    &mut strs.0
+}
+
+fn get_second(strs: &mut (String, String)) -> &mut String {
+    &mut strs.1
+}
+
+fn transfer_string(strs: &mut (String, String)) {
+    let fst = get_first(strs);
+    let snd = get_second(strs);
+    fst.push_str(snd);
+    snd.clear();
+}
+```
+
+假设借用检查器没有拒绝此函数。
+请判断是否存在某个输入，使得该函数在该输入上执行时会产生未定义行为。
+"""
+answer.answer = "此函数不可能导致未定义行为"
+prompt.distractors = ["此函数可能导致未定义行为"]
+context = """
+借用检查器拒绝此函数，是因为它假设 `get_first` 和 `get_second` 可能都返回对元组任一分量的可变引用，因此 `fst` 和 `snd` 可能指向同一个值。但在该程序中它们始终是不同的，所以该函数实际上是安全的。
+"""
+
+
+

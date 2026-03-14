@@ -1,0 +1,15 @@
+[[questions]]
+id = "c1b7cc2e-b5fb-4b67-b0bb-600d82931f08"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你刚下载了一个 Cargo 项目，然后在命令行运行 `cargo run`。以下哪个描述关于接下来发生的事情是**不正确的**？
+"""
+answer.answer = "Cargo 监视文件变化并在文件改变时重新执行二进制文件"
+prompt.distractors = [
+  "Cargo 下载并构建项目的所有依赖",
+  "Cargo 将项目构建为 `target/debug` 目录中的二进制文件",
+  "Cargo 执行项目的二进制文件"
+]
+context = """
+Cargo 默认不监视你的文件。但你可以使用 [cargo-watch](https://crates.io/crates/cargo-watch) 等插件来实现这一功能。
+"""

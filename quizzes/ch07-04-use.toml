@@ -1,0 +1,44 @@
+[[questions]]
+id = "a162c2c8-aadf-4963-a997-02a1035f2459"
+type = "MultipleChoice"
+prompt.prompt = "以下哪个说法最准确地描述了 `use` 关键字的作用？"
+answer.answer = "`use` 减少了引用指定路径中条目时的冗长程度"
+prompt.distractors = [
+  "`use` 将一个条目的内容从一个模块复制到另一个模块",
+  "`use` 允许访问绕过正常隐私规则的条目",
+  "`use` 向编译器指示某个条目将被使用并应被优化"
+]
+context = """
+`use` 允许以比不使用 `use` 时更短的路径引用指定路径中的条目，从而减少引用的冗长程度。
+"""
+
+
+[[questions]]
+id = "eccc2099-9880-4628-8474-f1d55e2a4a4a"
+type = "ShortAnswer"
+prompt.prompt = """
+考虑以下模块和 `use` 语句：
+
+```
+pub mod parent {
+  pub fn a() {}
+  fn b() {}
+  pub mod child {
+    pub fn c() {}
+  }
+}
+
+fn main() {
+  use parent::{*, child as alias};
+  // ...
+}
+```
+
+在 `main` 内部，可以引用 `a`、`b` 或 `c` 的路径总数是多少（不包括使用 `self`、`super` 或 `crate` 的路径）？
+请用数字回答，例如 0 或 1。例如，如果仅有 `a` 和 `parent::b` 两个有效路径，则答案为 2。
+"""
+answer.answer = "5"
+context = """
+到 `a` 有两条路径：`parent::a` 和 `a`。`b` 没有路径，因为它是私有的。到 `c` 有三条路径：
+`parent::child::c`、`child::c`、`alias::c`。
+"""

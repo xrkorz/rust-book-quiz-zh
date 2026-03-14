@@ -1,0 +1,41 @@
+
+[[questions]]
+id = "5d60cfc4-6377-48e7-96e4-fe1de0b0904e"
+type = "Tracing"
+prompt.program = """
+use std::fmt::Debug;
+fn main() {
+    let n = 1;
+    let s = String::from("Hello");
+    let v: Vec<&dyn Debug> = vec![&n, &s];
+    let n_ref = v[0] as &i32;
+    println!("{}", n_ref + 1);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 6
+context = """
+与某些面向对象语言不同，Rust 中的 trait 对象无法被"向下转型"为更具体的类型（[`Any`](https://doc.rust-lang.org/std/any/index.html) trait 的情况除外）。
+"""
+
+[[questions]]
+id = "cce62358-5291-4eb3-84d6-fbc570873ee3"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以两种方式实现一个泛型函数：
+
+```
+fn f_opt1<T: SomeTrait>(t: &T) { /* ... */ }
+fn f_opt2(t: &dyn SomeTrait) { /* ... */ }
+```
+
+在大多数情况下，以下哪些是优先选择 trait 对象版本（`f_opt2`）而非类型参数版本（`f_opt1`）的合理理由？选择所有适用项。
+"""
+answer.answer = ["更快的编译速度", "更小的二进制体积"]
+prompt.distractors = [
+    "更好的运行时性能",
+    "更好的开发者人体工程学"
+]
+context = """
+通过避免单态化，trait 对象函数的编译速度更快，生成的二进制文件也更小。然而，这通常以运行时性能为代价。对于开发者而言，trait 对象很少比带 trait 约束的泛型更易于使用。
+"""

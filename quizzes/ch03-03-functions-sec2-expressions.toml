@@ -1,0 +1,29 @@
+[[questions]]
+id = "e816708d-b0eb-4506-8c33-6ea0df69f14f"
+type = "MultipleChoice"
+prompt.prompt = """
+在 Rust 中，花括号块 `{ /* ... */ }` 是：
+1. 一个表达式
+2. 一条语句
+3. 一个语法作用域
+"""
+answer.answer = "1 和 3"
+prompt.distractors = [ "仅 1", "仅 2", "2 和 3" ]
+context = """
+块是一个表达式（第 1 条），其中允许包含语句。它同时也为内部的 let 绑定定义了一个语法作用域（第 3 条）。
+"""
+
+[[questions]]
+id = "42671602-ada3-4943-aa73-28aebcfe5011"
+type = "Tracing"
+prompt.program = """
+fn f(x: i32) -> i32 { x + 1 }
+fn main() {
+  println!("{}", f({
+    let y = 1;
+    y + 1
+  }));
+}
+"""
+answer.doesCompile = true
+answer.stdout = "3"

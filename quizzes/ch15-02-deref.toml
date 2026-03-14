@@ -1,0 +1,34 @@
+[[questions]]
+id = "f4971d37-55d5-48c5-9966-a28b54ed3bee"
+type = "Tracing"
+prompt.program = """
+use std::ops::Deref;
+
+#[derive(Clone, Copy)]
+struct AccessLogger(i32);
+
+impl Deref for AccessLogger {
+    type Target = i32;
+    fn deref(&self) -> &Self::Target {
+        println!("deref");
+        &self.0
+    }
+}
+
+fn main() {
+  let n = AccessLogger(-1);
+  let x = *n + 1;
+  let n2 = n;
+  println!("{} {}", x, *n)
+}
+"""
+answer.doesCompile = true
+answer.stdout = """
+deref
+deref
+0 -1
+"""
+context = """
+每次对 `n` 解引用时，`AccessLogger` 都会打印 "deref"，共发生两次。
+注意，将 `n` 复制到 `n2` 并不会对 `n` 进行解引用。
+"""

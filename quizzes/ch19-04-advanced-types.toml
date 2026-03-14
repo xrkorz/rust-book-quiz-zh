@@ -1,0 +1,40 @@
+[[questions]]
+id = "d3d9197f-8baf-4ec5-9988-282c67636d3c"
+type = "Tracing"
+prompt.program = """
+fn expect_none(x: Option<i32>) -> ! {
+    match x {
+        Some(n) => panic!("Expected none, found Some({n})"),
+        None => ()
+    }
+}
+
+fn main() {
+    println!("{:?}", expect_none(None));
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 4
+context = """
+`!` 类型不适合作为此函数的返回类型，因为它只在某些情况下发生 panic，而不是所有情况。
+"""
+
+[[questions]]
+id = "5c5cb765-a561-459f-8223-9e72e824c5da"
+type = "Tracing"
+prompt.program = """
+fn is_equal<T: Eq>(t1: &T, t2: &T) -> bool {
+  t1 == t2
+}
+
+fn main() {
+  println!("{}", is_equal("Hello", "world"));
+}
+
+"""
+answer.doesCompile = false
+answer.lineNumber = 6
+context = """
+调用 `is_equal` 时传入了类型为 `&str` 的值，这意味着 `T = str`。然而，`str`
+只有在泛型函数中将 `T` 标记为 `?Sized` 时才允许使用。
+"""

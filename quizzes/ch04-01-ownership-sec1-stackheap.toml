@@ -1,0 +1,38 @@
+[[questions]]
+id = "5d774a01-8604-4386-8d81-498496ccd96c"
+type = "MultipleChoice"
+prompt.prompt = """
+下列哪项最能描述栈（stack）与堆（heap）的区别？
+"""
+answer.answer = "栈保存与特定函数关联的数据，而堆保存可以比函数生命周期更长的数据"
+prompt.distractors = [
+  "栈可以持有指向堆上数据的指针，而堆只保存不含指针的数据",
+  "栈保存不可变数据，而堆保存可变数据。",
+  "栈保存可复制的数据，而堆保存不可复制的数据。"
+]
+context = """
+栈帧与特定函数关联，函数返回时被释放。
+堆上的数据可以无限期存活。注意，栈和堆上的数据都可以是可变的，也可以是可复制的。堆中允许
+包含指针（甚至可以指向栈，我们稍后会看到）。
+"""
+
+[[questions]]
+id = "4c953b2d-65bf-4dab-bbbb-14c9b15a690e"
+type = "ShortAnswer"
+prompt.prompt = """
+考虑以下代码片段的执行过程，最终状态如下所示：
+
+```aquascope,interpreter
+#fn main() {
+let a = Box::new(15);
+let b = a;
+let c = Box::new(15);`[]`
+#}
+```
+
+在最终状态下，数字 `15` 在内存中共有几份副本？请用数字作答，例如 0 或 1。
+"""
+answer.answer = "2"
+context = """
+两个 box 各自包含一份数字 15。赋值 `let b = a` 复制的是堆指针，而不是堆上的数字。
+"""

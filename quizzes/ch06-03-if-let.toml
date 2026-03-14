@@ -1,0 +1,49 @@
+[[questions]]
+id = "b2e05b2a-1f98-4498-9a9b-e1e358adf476"
+type = "MultipleChoice"
+prompt.prompt = """
+在以下函数中，使用哪种控制流结构最符合惯用法？
+
+```
+enum Location {
+  Point(i32),
+  Range(i32, i32)
+}
+
+fn print_range_max(loc: &Location) {
+  // 如果 loc 是 Range，则打印 Range 的第二个字段
+}
+```
+"""
+answer.answer = "`if let`"
+prompt.distractors = [
+  "`match`"
+]
+context = """
+如果函数只在一种条件下有效果，使用 `if let` 最符合惯用法。
+"""
+
+[[questions]]
+id = "fe17286b-67ed-43a7-a1df-10afee7921cc"
+type = "MultipleChoice"
+prompt.prompt = """
+在以下函数中，使用哪种控制流结构最符合惯用法？
+
+```
+enum Location {
+  Point(i32),
+  Range(i32, i32)
+}
+
+fn get_start(loc: &Location) -> i32 {
+  // 返回 Range 的第一个字段或 Point 的唯一字段
+}
+```
+"""
+answer.answer = "`match`"
+prompt.distractors = [
+  "`if let`",
+]
+context = """
+如果函数需要在每种条件下都返回一个值，则使用 `match` 最为合适。
+"""

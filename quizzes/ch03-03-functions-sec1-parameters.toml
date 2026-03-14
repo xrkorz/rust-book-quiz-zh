@@ -1,0 +1,23 @@
+[[questions]]
+id = "8e2d2cd0-48d4-4901-a8c5-c994fb318014"
+type = "ShortAnswer"
+prompt.prompt = "在 Rust 中声明新函数的关键字是："
+answer.answer = "fn"
+
+[[questions]]
+id = "bbcac2a0-dec8-4b3b-88fd-37880e804259"
+type = "Tracing"
+prompt.program = """
+fn f(x) {
+  println!("{x}");
+}
+
+fn main() {
+  f(0);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 1
+context = """
+函数必须声明其参数的类型。
+"""

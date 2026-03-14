@@ -1,0 +1,45 @@
+[[questions]]
+id = "8282968d-b1d3-42b4-b128-f97b951db4c6"
+type = "Tracing"
+prompt.program = """
+struct Example(i32);
+impl Drop for Example {
+    fn drop(&mut self) {
+        self.0 += 1;
+        println!("drop {}", self.0);
+    }
+}
+fn main() {
+    let e = Example(0);
+    drop(e);
+    drop(e);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 11
+context = """
+一个已拥有的值不能被 drop 两次，因此第二次调用 drop 会产生编译错误。
+"""
+
+[[questions]]
+id = "b9121273-1c1e-4e99-9cff-a23f845aaeeb"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下分配字符串的代码片段：
+
+```rust
+fn main() {
+    let mut s = String::new();
+    ____
+}
+```
+
+以下哪些是可以填入下划线处、能够使 `s` 被 drop 的有效操作？
+"""
+answer.answer = ["`drop(s);`", "`(|_| ())(s);`", "`{ s };`"]
+prompt.distractors = [
+    "`s.drop();`",
+]
+context = """
+任何移动 `s` 并丢弃结果的操作都会导致 `s` 被 drop。但是，`s.drop()` 不能被直接调用。
+"""

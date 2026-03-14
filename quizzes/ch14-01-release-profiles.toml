@@ -1,0 +1,14 @@
+[[questions]]
+id = "c753bc38-0dc1-44d5-8b06-136fdbbc26d2"
+type = "MultipleChoice"
+prompt.prompt = """
+当你不带任何额外标志运行 `cargo build` 时，默认使用哪个构建配置（profile）？
+"""
+answer.answer = "`dev`"
+prompt.distractors = [
+    "`release`",
+    "`build`",
+]
+context = """
+为了最小化编译时间，默认配置是 `dev`。如果你希望使用 `release` 配置以获得更长的编译时间但更快的代码执行速度，应添加 `--release`。（不存在 `build` 配置。）
+"""

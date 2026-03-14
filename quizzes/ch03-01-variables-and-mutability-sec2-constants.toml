@@ -1,0 +1,25 @@
+[[questions]]
+id = "a48e524e-852c-400c-ae68-5c76a6761596"
+type = "MultipleChoice"
+prompt.prompt = "关于使用 `let` 和 `const` 声明变量的区别，以下哪个说法是正确的？"
+answer.answer = "`const` 可以在全局作用域中使用，而 `let` 只能在函数内部使用"
+prompt.distractors = [
+  "它们只是声明变量的不同语法，语义完全相同",
+  "如果 `const` 变量的名称不使用 `UPPER_SNAKE_CASE`，编译器会报错",
+  "`const` 只能被赋值为字面量，不能是涉及计算的表达式"
+]
+
+[[questions]]
+id = "d209784f-cc52-4451-8049-ad204e89d587"
+type = "Tracing"
+prompt.program = """
+const TWO: u32 = 1 + 1;
+fn main() {
+  println!("{TWO}");
+}
+"""
+answer.doesCompile = true
+answer.stdout = "2"
+context = """
+`const` 变量允许在函数外部定义，并且可以进行有限形式的计算。
+"""

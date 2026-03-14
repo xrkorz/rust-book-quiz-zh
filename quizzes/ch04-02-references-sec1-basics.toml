@@ -1,0 +1,51 @@
+[[questions]]
+id = "0b8dbb4f-7c56-4b6e-8358-95c7b46f90c3"
+type = "ShortAnswer"
+prompt.prompt = """
+考虑以下程序，显示最后一行执行后的内存状态：
+```aquascope,interpreter
+#fn main() {
+let x = Box::new(0);
+let y = Box::new(&x);`[]`
+#}
+```
+
+如果你想通过 `y` 取出数字 `0`，需要使用几次解引用？
+请用数字作答。例如，如果正确表达式是 `*y`，则答案为 1。
+"""
+answer.answer = "3"
+context = """
+`***y` 是正确的表达式。`y` 的类型为 `Box<&Box<i32>>`，它是一个指向栈上引用的堆指针，
+而该引用又指向另一个堆指针。因此 `y` 需要解引用三次，每层间接对应一次。
+"""
+
+[[questions]]
+id = "7cf19153-3647-4afc-953a-f9392ddb96fb"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下程序，显示最后一行执行后的内存状态：
+
+```aquascope,interpreter
+fn get_first(vr: &Vec<i32>) -> i32 {
+  vr[0]
+}
+
+fn main() {
+  let mut v = vec![0, 1, 2];
+  let n = get_first(&v);
+  println!("{} {}", n, v[1]);`[]`
+}
+```
+
+下列哪项最能解释为何调用 `get_first` 后 `v` 没有被释放？
+"""
+answer.answer = "`vr` 是一个引用，它不拥有所指向向量的所有权"
+prompt.distractors = [
+  "`vr` 在 `get_first` 内未被修改",
+  "`get_first` 返回的是 `i32` 类型的值，而不是向量本身",
+  "`v` 在 `println` 中于调用 `get_first` 之后被使用"
+]
+context = """
+引用是非拥有型指针。因此将 `&v` 传给 `get_first` 不会将 `v` 的所有权移动到 `get_first` 中，
+`get_first` 结束后 `v` 也不会被释放。
+"""

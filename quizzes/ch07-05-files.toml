@@ -1,0 +1,51 @@
+[[questions]]
+id = "6a94bc90-6cc5-4a47-838c-596d3747b7e4"
+type = "ShortAnswer"
+prompt.prompt = """
+假设一个 Rust 包的目录结构如下：
+
+```text
+foobar
+├── Cargo.toml
+└── src/
+    ├── lib.rs
+    ├── engine.rs
+    └── engine/
+        └── analysis.rs
+```
+
+各文件的内容如下：
+
+
+```
+// engine/analysis.rs
+pub fn run() {}
+```
+
+```
+// engine.rs
+mod analysis;
+pub use analysis::*;
+```
+
+```
+// lib.rs
+pub mod engine;
+```
+
+假设另一位 Rust 开发者在另一个包中使用 `foobar` 库 crate，并想调用 `run` 函数。
+他们应该写什么路径？
+"""
+answer.answer = "foobar::engine::run"
+answer.alternatives = ["foobar::engine::run()"]
+context = """
+该目录结构生成的模块树如下：
+
+```text
+foobar
+└── engine
+    └── run
+```
+
+因此 `run` 的路径为 `foobar::engine::run`。
+"""

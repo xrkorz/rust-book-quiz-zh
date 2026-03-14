@@ -1,0 +1,52 @@
+[[questions]]
+id = "e127342d-7ad2-4730-b930-774411e1872d"
+type = "Tracing"
+prompt.program = """
+use std::rc::Rc;
+fn main() {
+    let n = Rc::new(1);
+    let mut n2 = Rc::clone(&n);
+    *n2 += 1;
+    println!("{}", n);
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 5
+context = """
+`Rc` 内部的数据无法在不使用内部可变性（见下一节）的情况下被修改。`Rc` 通过实现 `Deref` trait
+但不实现 `DerefMut` trait 来强制执行这一特性。
+"""
+
+[[questions]]
+id = "3b43eb45-3400-4555-b605-9ae1cde7c80c"
+type = "Tracing"
+prompt.program = """
+use std::rc::Rc;
+struct Example;
+impl Drop for Example {
+    fn drop(&mut self) {
+        println!("drop");
+    }
+}
+fn main() {
+    let x = Rc::new(Example);
+    let y = Rc::clone(&x);
+    println!("A");
+    drop(x);
+    println!("B");
+    drop(y);
+    println!("C");
+}
+"""
+answer.doesCompile = true
+answer.stdout = """
+A
+B
+drop
+C
+"""
+context = """
+引用计数指针内部的值只会被 drop 一次，因此 "drop" 只打印一次。
+最初的 `drop(x)` 会减少引用计数，但不会 drop 该值，因为 `y` 仍然存活。
+之后 `drop(y)` 发现引用计数为 0，才会 drop `Example`。
+"""

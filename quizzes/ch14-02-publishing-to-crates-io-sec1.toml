@@ -1,0 +1,50 @@
+[[questions]]
+id = "e2df0a8a-7bdd-40a3-9918-e4a856978cbb"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在发布一个库，并希望在 `lib.rs` 文件顶部为整个库编写文档。
+该文档应使用以下哪种注释语法作为前缀：
+"""
+answer.answer = "`//!`"
+prompt.distractors = [
+    "`///`",
+    "`//`",
+]
+context = """
+`//!` 适用于模块级文档，而 `///` 用于为函数等单个条目编写文档。
+"""
+
+[[questions]]
+id = "cfb65011-0578-4032-8aaa-b346b091602b"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在创建一个名为 `worldly` 的库，其 `lib.rs` 中包含以下函数：
+
+    /// Adds the string "world" to `s`.
+    ///
+    /// # Example
+    /// ```
+    /// let mut s = String::new();
+    /// worldly::add_world(&mut s);
+    /// assert_eq!(s, "Hello world");
+    /// ```
+    pub fn add_world(s: &mut String) {
+        s.push_str("world");
+    }
+
+    #[test]
+    fn test_add_world() {
+        let mut s = String::new();
+        add_world(&mut s);
+        assert_eq!(s, "world");
+    }
+
+如果你运行 `cargo test`，是否会有测试失败？
+"""
+answer.answer = "是"
+prompt.distractors = [
+    "否",
+]
+context = """
+错误的示例会作为文档测试运行，并导致 `cargo test` 失败。
+"""

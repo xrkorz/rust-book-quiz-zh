@@ -1,0 +1,60 @@
+[[questions]]
+id = "91fb1ec6-fb11-4b6f-88df-dbc921a4108f"
+type = "MultipleChoice"
+prompt.prompt = "给定一个类型为 `Result<T, E>` 的任意表达式 `e`，以下哪个代码片段最能表示 `e?` 的展开方式？"
+answer.answer = """
+```
+match e {
+  Ok(x) => x,
+  Err(err) => { return Err(err); }
+}
+```
+  """
+prompt.distractors = [
+  """
+```
+if let Err(err) = e {
+  return Err(err);
+}
+```
+  """,
+  """
+```
+e.unwrap()
+```
+  """,
+  """
+```
+match e {
+  Ok(x) => x,
+  Err(err) => panic!("{err}")
+}
+```
+  """,
+]
+context = """
+如果 `e` 是 `Result`，则 `e?` 在可能的情况下提取 `Ok` 中的值，否则将 `Err` 从当前函数中返回。
+"""
+
+[[questions]]
+id = "0ea46358-f560-4d3e-85d2-a1806eb7c797"
+type = "Tracing"
+prompt.program = """
+// assume hello.txt has the contents "will"
+
+fn read_username_from_file() -> Option<String> {
+  let mut username_file = File::open("hello.txt")?;
+  let mut username = String::new();
+  username_file.read_to_string(&mut username)?;
+  Some(username)
+}
+
+fn main() {
+  println!("{}", read_username_from_file().unwrap());
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 4
+context = """
+`File::open` 返回 `Result`，但 `read_username_from_file` 的返回类型期望 `Option`。因此在将 `Result` 转换为 `Option`（例如使用 `Result::ok` 方法）之前，使用 `?` 运算符是无效的。
+"""

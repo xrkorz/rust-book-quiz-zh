@@ -1,0 +1,40 @@
+[[questions]]
+id = "f0ec64fa-262f-4819-8379-acad7aaf8be2"
+type = "Tracing"
+prompt.program = """
+#[derive(Debug)]
+struct Rectangle {
+  width: u32,
+  height: u32,
+}
+
+fn main() {
+  let rect1 = Rectangle {
+    width: 30,
+    height: 50,
+  };
+
+  let a = area(rect1);
+  println!("{} * {} = {}", rect1.width, rect1.height, a);
+}
+
+fn area(rectangle: Rectangle) -> u32 {
+  rectangle.width * rectangle.height
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 14
+context = """
+`area` 函数获取了其参数 `rectangle` 的所有权。因此调用 `area(rect1)` 会移动 `rect1`，导致它在下一行无法再被使用。
+"""
+
+[[questions]]
+id = "9ce4156e-4112-4101-a2c7-51758ceca639"
+type = "MultipleChoice"
+prompt.prompt = "`Display` trait 和 `Debug` trait 之间的区别，下列哪项陈述最为准确？"
+answer.answer = "`Display` 用于向终端用户展示值，而 `Debug` 用于开发者内部调试"
+prompt.distractors = [
+  "`Display` 用于将值打印到控制台，而 `Debug` 用于在调试器中查看值",
+  "`Display` 无法为结构体实现，而 `Debug` 可以为结构体实现",
+  "两者没有区别，`Display` 和 `Debug` 是同一个 trait 的别名"
+]

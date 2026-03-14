@@ -1,0 +1,26 @@
+[[questions]]
+id = "43081862-aac8-4e18-9c55-1107ea4c7cc1"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在为一个数据库连接设计如下 API：
+
+```
+struct DbConnection { /* ... */ }
+impl DbConnection {
+    fn query(&self) -> DbResult {
+        /* ... */
+    }
+}
+```
+
+你的数据库不支持同一连接上的并发查询。`DbConnection` 应该实现以下哪个标记 trait？
+"""
+answer.answer = "`Send`"
+prompt.distractors = [
+    "`Send` 和 `Sync`",
+    "`Sync`",
+    "`Send` 和 `Sync` 都不实现"
+]
+context = """
+将 `DbConnection` 在线程间传递是没有问题的，因此 `DbConnection` 应该实现 `Send`。但如果允许 `Arc<Database>` 被共享，使多个线程并发调用 `db.query()`，则是不安全的，因此 `DbConnection` 不应实现 `Sync`。
+"""

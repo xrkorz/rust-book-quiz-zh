@@ -1,0 +1,117 @@
+[[questions]]
+id = "5b6e4016-c089-4cb3-96a7-ca9f88694488"
+type = "Tracing"
+prompt.program = """
+enum Location {
+  Point(i32),
+  Range(i32, i32)
+}
+
+fn main() {
+  let l: Location = Location::Range(0, 5);
+  let n = match l {
+    Location::Point(_) => -1,
+    Location::Range(_, 5) => 5,
+    Location::Range(0, _) => 0,
+    _ => -2
+  };
+  println!("{n}");
+}
+"""
+answer.doesCompile = true
+answer.stdout = "5"
+context = """
+每个匹配分支从上到下依次尝试。第二和第三个模式都适用，因此使用第二个。
+"""
+
+
+[[questions]]
+id = "f7c361e0-733a-4d48-9809-736e3c1e2b67"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑为 `Option` 类型实现的以下方法：
+
+```
+impl<T> Option<T> {
+  fn unwrap_or(self, other: T) -> T {
+    match self {
+      Some(t) => t,
+      None => other
+    }
+  }
+}
+```
+
+以下哪句话最准确地描述了该函数的行为？
+"""
+answer.answer = "如果 `self` 中存在值则返回该值，否则返回 `other`"
+prompt.distractors = [
+  "如果 `self` 中存在值则返回包含该值的新 Option，否则返回 `other`",
+  "如果 `self` 中没有值则将 `other` 插入 `self`",
+  "如果 `self` 中存在值则返回该值的引用，否则返回 `other`"
+]
+context = """
+该函数通过获取 `self` 的所有权来"解包" Option 并取出其中的值；如果不存在值，则回退返回 `other`。
+这是标准库中真实存在的函数！
+"""
+
+
+[[questions]]
+id = "1e4f082c-ffa4-4d33-8726-2dbcd72e1aa2"
+type = "Tracing"
+prompt.program = """
+#[derive(Debug)]
+enum Either {
+  Left(usize),
+  Right(String)
+}
+
+fn main() {
+  let x = Either::Right(String::from("Hello world"));
+  let value = match x {
+    Either::Left(n) => n,
+    Either::Right(s) => s.len()
+  };
+  println!("{x:?} {value}");
+}
+"""
+answer.doesCompile = false
+answer.lineNumber = 13
+context = """
+匹配分支 `Either::Right(s)` 移走了字段 `s`，因此 `x` 不能在 `println` 中使用。
+"""
+
+
+[[questions]]
+id = "6e012d34-5c59-443e-85d9-385f0d7dee13"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑以下两种将无符号整数减两的函数实现：
+
+```
+fn decr_twice_v1(n: u32) -> Option<u32> {
+  match n {
+    0 => None,
+    1 => None,
+    n2 => Some(n2 - 2)
+  }
+}
+
+fn decr_twice_v2(n: u32) -> Option<u32> {
+  if n == 0 {
+    None
+  } else if n == 1 {
+    None
+  } else {
+    Some(n - 2)
+  }
+}
+```
+
+这两个函数在以下输入上行为相同：
+"""
+answer.answer = "所有输入"
+prompt.distractors = [ "没有任何输入", "部分但非全部输入" ]
+context = """
+`match` 和 `if` 在这里执行相同的功能。match 类似于一种专用的 `if`，用于检查被匹配对象的相等性。
+"""

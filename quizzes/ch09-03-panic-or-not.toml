@@ -1,0 +1,32 @@
+[[questions]]
+id = "31c55174-3fdf-4a21-959c-bb4056def264"
+type = "MultipleChoice"
+prompt.prompt = """
+一位 Rust 程序员正在设计一个用于编写命令行界面的库。
+作为该库的一部分，他们正在实现一个函数来解析用户提供的命令行标志。
+以下哪种实现最适合该领域？
+
+```
+fn parse_flag_v1(flag: &str) -> Result<String, String> {
+  match flag.strip_prefix("--") {
+    Some(no_dash) => Ok(no_dash.to_string()),
+    None => Err(format!("Invalid flag {flag}"))
+  }
+}
+
+fn parse_flag_v2(flag: &str) -> String {
+  match flag.strip_prefix("--") {
+    Some(no_dash) => no_dash.to_string(),
+    None => panic!("Invalid flag {flag}")
+  }
+}
+```
+"""
+answer.answer = "`parse_flag_v1`"
+prompt.distractors = [ "`parse_flag_v2`" ]
+prompt.answerIndex = 0
+context = """
+在这里，程序员可能希望使用*可恢复*错误（`Result`）。如果 CLI 用户传入了格式不正确的标志，
+CLI 库可能希望提供额外帮助，例如显示可用标志的集合。使用 panic 会迫使应用程序只显示 panic 消息，
+这对用户体验来说可能更差。
+"""

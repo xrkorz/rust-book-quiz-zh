@@ -1,0 +1,103 @@
+[[questions]]
+id = "7859b06e-72ba-4c07-a3e2-b4f8cb7fd903"
+type = "MultipleChoice"
+prompt.prompt = """
+回顾 `Add` trait 的定义：
+
+```
+trait Add<Rhs=Self> {
+    type Output;
+    fn add(self, rhs: Rhs) -> Self::Output;
+}
+```
+
+以下哪项最准确地描述了为什么 `Output` 是关联类型，而 `Rhs` 是类型参数？
+"""
+answer.answer = "类型 `T` 可以与许多其他类型 `S` 相加，但给定的 `T + S` 操作应始终有单一的输出类型"
+prompt.distractors = [
+    "加法操作以 `Rhs` 为输入并产生 `Output` 为输出，类型参数用于输入而关联类型用于输出",
+    "一个 trait 只能有一个关联类型，因此 `Rhs` 必须作为 `Add` 的类型参数",
+    "关联类型不能有默认值，而 trait 类型参数可以有默认值"
+]
+context = """
+关联类型确实目前不能有默认值，但这不是 `Add` trait 中 `Rhs` 为类型参数的主要动机。
+"""
+
+[[questions]]
+id = "d2c77d93-3887-40a2-b93a-501aa315d676"
+type = "MultipleChoice"
+prompt.prompt = """
+回顾 `Add` trait 的定义：
+
+```
+trait Add<Rhs=Self> {
+    type Output;
+    fn add(self, rhs: Rhs) -> Self::Output;
+}
+```
+
+以下哪项最准确地描述了为什么 `Rhs` 是 trait `Add` 的类型参数而不是函数 `add` 的类型参数？即，为什么 `Add` 不是这样设计的：
+
+```
+trait Add {
+    type Output;
+    fn add<Rhs>(self, rhs: Rhs) -> Self::Output;
+}
+```
+"""
+answer.answer = "如果 `Rhs` 是函数级类型参数，那么 `add` 的定义就无法对 `Rhs` 的结构做任何假设"
+prompt.distractors = [
+    "当 `Rhs` 是 trait 级类型参数时，类型检查器的执行效率比函数级类型参数更高",
+    "`Rhs` 作为函数级类型参数时不能有默认类型",
+    "由于函数级类型参数，`add` 函数的代码生成需要额外的单态化时间"
+]
+context = """
+这样的设计没有多大意义，因为 `add<Rhs>` 对 `Rhs` 的结构没有任何信息，
+因此用这种方式实现任何合理的加法函数都是不可能的。
+"""
+
+[[questions]]
+id = "79db9ca4-693f-4e62-8b8d-356b51a63006"
+type = "Tracing"
+prompt.program = """
+mod inner {
+    pub trait A {
+        fn f(&self) -> usize { 0 }
+    }
+    pub trait B {
+        fn f(&self) -> usize { 1 }
+    }
+    pub struct P;
+    impl A for P {}
+    impl B for P {}
+}
+fn main() {
+    use inner::{P, B};
+    println!("{}", P.f());
+}
+"""
+answer.doesCompile = true
+answer.stdout = "1"
+context = """
+当两个冲突的 trait 实现中只有一个被导入时，Rust 会使用被导入的那个实现。这里不需要完全限定语法。
+"""
+
+[[questions]]
+id = "cb7e4d54-e95b-4153-99d6-e8f380e4f8b4"
+type = "MultipleChoice"
+prompt.prompt = """
+考虑为类型 `T` 实现 trait `Trait`。在以下哪种情况下
+你需要将 `T` 包装在新类型（newtype）中？
+"""
+answer.answer = [
+    "`Trait` 定义在外部 crate 中且 `T` 定义在外部 crate 中",
+]
+prompt.distractors = [
+    "`Trait` 定义在本地 crate 中且 `T` 定义在外部 crate 中",
+    "`Trait` 定义在外部 crate 中且 `T` 定义在本地 crate 中",
+    "`Trait` 定义在本地 crate 中且 `T` 定义在本地 crate 中",
+]
+context = """
+孤儿规则规定，如果 trait 和类型都定义在外部 crate 中，则不能为该类型实现该 trait，
+因此需要使用新类型（newtype）。如果 trait 或类型中有任意一个定义在本地，则不需要新类型。
+"""

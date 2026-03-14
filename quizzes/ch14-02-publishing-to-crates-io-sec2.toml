@@ -1,0 +1,37 @@
+[[questions]]
+id = "7e4eeb62-55c2-443b-a8cc-fba060501245"
+type = "MultipleChoice"
+prompt.prompt = """
+假设你正在发布库 `foobar v0.1.0`。在运行 `cargo publish` 之后，你发现某个函数中存在一个 bug。
+以下哪项最能描述如何用相同的 `v0.1.0` 版本号覆盖已发布的 crate？
+"""
+answer.answer = "不可能用相同版本号覆盖已发布的 crate"
+prompt.distractors = [
+    "在 `cargo publish` 命令中添加 `--overwrite-published` 标志",
+    "登录 Crates.io 并删除已发布 crate 的 `v0.1.0`",
+    "运行 `cargo yank` 然后再运行 `cargo publish`"
+]
+context = """
+Crates.io 不允许覆盖已发布的版本。在这种情况下，最佳方案是撤回（yank）有 bug 的版本，然后发布新版本，例如 `v0.1.1`。
+"""
+
+[[questions]]
+id = "84ac16a8-2460-4baf-8913-06da6e3603e6"
+type = "MultipleChoice"
+prompt.prompt = """
+以下哪项不是将 crate 发布到 Crates.io 的必要步骤？
+"""
+answer.answer = "为 crate 中每个公共函数添加文档"
+prompt.distractors = [
+    "在 `Cargo.toml` 的 `[package]` 部分添加许可证",
+    "注册并登录 Crates.io",
+    "选择一个在 Crates.io 上尚未注册的 crate 名称"
+]
+context = """
+为公共函数添加文档当然是推荐的做法，但默认情况下并非必须。注意，如果你希望 Rust 将未文档化的代码视为错误，
+可以在库的根文件中添加以下声明：
+
+```
+#![deny(missing_docs)]
+```
+"""

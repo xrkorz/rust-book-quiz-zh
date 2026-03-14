@@ -1,0 +1,32 @@
+[[questions]]
+id = "79942534-f414-41e6-944f-96d57905632c"
+type = "MultipleChoice"
+prompt.prompt = "使用 `a + b` 和 `a.push_str(b)` 拼接两个字符串有什么区别？"
+answer.answer = "`+` 会消耗 `a` 的所有权，而 `push_str` 不会"
+prompt.distractors = [
+  "`push_str` 在运行时比 `+` 更高效",
+  "`push_str` 会消耗 `b` 的所有权，而 `+` 不会",
+  "没有区别，它们是同一函数的别名"
+]
+context = """
+`push_str` 接受 `&mut self`，而 `+` 接受 `self`，因此 `+` 会消耗所有权，而 `push_str` 不会。
+"""
+
+[[questions]]
+id = "f1ab2171-96f0-4380-b16d-9055a9a00415"
+type = "ShortAnswer"
+prompt.prompt = """
+以下程序中，堆分配最多可能发生多少次？请用数字回答，例如 0 或 1。
+
+```
+let s1 = String::from("tic");
+let s2 = String::from("tac");
+let s3 = String::from("toe");
+
+let s = s1 + "-" + &s2 + "-" + &s3;
+```
+"""
+answer.answer = "7"
+context = """
+每次调用 `String::from` 会发生一次分配，每次调用 `+` 也会发生一次分配。
+"""

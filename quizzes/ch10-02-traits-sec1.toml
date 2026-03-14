@@ -1,0 +1,49 @@
+[[questions]]
+id = "c4adb1a8-ca6a-43c1-ae34-54302f674ece"
+type = "Tracing"
+prompt.program = """
+trait MakeNoise {
+  fn make_noise(&self) {
+    println!("(silence)");
+  }
+}
+
+struct Dog {}
+struct Cat {}
+
+impl MakeNoise for Dog {
+  fn make_noise(&self) {
+    println!("bark");
+  }
+}
+
+impl MakeNoise for Cat {}
+
+fn main() {
+  let dog = Dog {};
+  let cat = Cat {};
+  dog.make_noise();
+  cat.make_noise();
+}
+"""
+answer.doesCompile = true
+answer.stdout = "bark\n(silence)"
+context = """
+`MakeNoise` 的实现为 `Dog` 提供了具体实现，而 `Cat` 使用了默认实现。
+因此对各自调用 `make_noise` 分别打印 `bark` 和 `(silence)`。
+"""
+
+[[questions]]
+id = "783f2485-e5b9-483b-8368-064366c77285"
+type = "MultipleChoice"
+prompt.prompt = "以下关于 Rust 允许哪些 trait 实现的陈述中，请选出所有正确的陈述。"
+prompt.distractors = ["你可以为外部类型实现外部 trait"]
+answer.answer = [
+  "你可以为本地类型实现外部 trait",
+  "你可以为外部类型实现本地 trait",
+  "你可以为本地类型实现本地 trait"
+]
+context = """
+"孤儿规则"要求你不能为外部类型实现外部 trait，
+这是为了确保当两个 crate 提供冲突的实现时代码不会出错。
+"""
