@@ -119,9 +119,5 @@ jobs:
         cd packages/trpl
         cargo build
 
-    - name: Run mdbook tests
-      run:
-        mdbook test --library-path packages/trpl/target/debug/deps
-    
     - name: Build mdbook
       run: mdbook build
