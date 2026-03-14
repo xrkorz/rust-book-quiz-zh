@@ -24,29 +24,41 @@
         <link rel="stylesheet" href="fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
         <link rel="stylesheet" href="ferris.css">
 
 
-        <!-- Provide site root to javascript -->
+        <!-- Provide site root and default themes to javascript -->
         <script>
-            var path_to_root = "";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
-                var theme = localStorage.getItem('mdbook-theme');
-                var sidebar = localStorage.getItem('mdbook-sidebar');
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
 
                 if (theme.startsWith('"') && theme.endsWith('"')) {
                     localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
@@ -60,7 +72,8 @@
 
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script>
-            var theme;
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
@@ -73,8 +86,8 @@
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var sidebar = null;
-            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
@@ -110,13 +123,14 @@
                             <i class="fa fa-paint-brush"></i>
                         </button>
                         <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -273,10 +287,7 @@ Blue: 10
 <p>这会打印出 <code>{"world": 2, "hello": 1, "wonderful": 1}</code>。你可能会看到相同的键值对以不同的顺序打印：回忆一下<a href="#%E8%AE%BF%E9%97%AE%E5%93%88%E5%B8%8C-map-%E4%B8%AD%E7%9A%84%E5%80%BC">“访问哈希 map 中的值”</a>部分中提到遍历哈希 map 会以任意顺序进行。</p>
 <p><code>split_whitespace</code> 方法返回一个由空格分隔 <code>text</code> 值子 slice 的迭代器。<code>or_insert</code> 方法返回这个键的值的一个可变引用（<code>&amp;mut V</code>）。这里我们将这个可变引用储存在 <code>count</code> 变量中，所以为了赋值必须首先使用星号（<code>*</code>）解引用 <code>count</code>。这个可变引用在 <code>for</code> 循环的结尾离开作用域，这样所有这些改变都是安全的并符合借用规则。</p>
 <h3 id="哈希函数"><a class="header" href="#哈希函数">哈希函数</a></h3>
-<p><code>HashMap</code> 默认使用一种叫做 SipHash 的哈希函数，它可以提供对涉及哈希表<sup class="footnote-reference"><a href="#siphash">1</a></sup>的拒绝服务（Denial of Service, DoS）攻击的抵抗能力。不过这不是目前可用的最快哈希算法，但为了更好的安全性而接受一些性能下降，是值得的权衡。如果你分析代码后发现默认哈希函数对你的用途来说太慢，就可以通过指定不同的 hasher 来切换到其他函数。<em>hasher</em> 是一种实现了 <code>BuildHasher</code> trait 的类型。<a href="ch10-02-traits.html">第十章</a>会讨论 trait 以及如何实现它们。你不一定要从零开始自己实现 hasher；<a href="https://crates.io/">crates.io</a> 上有其他 Rust 用户共享的库，它们提供了许多常见哈希算法的 hasher 实现。</p>
-<div class="footnote-definition" id="siphash"><sup class="footnote-definition-label">1</sup>
-<p><a href="https://en.wikipedia.org/wiki/SipHash">https://en.wikipedia.org/wiki/SipHash</a></p>
-</div>
+<p><code>HashMap</code> 默认使用一种叫做 SipHash 的哈希函数，它可以提供对涉及哈希表<sup class="footnote-reference" id="fr-siphash-1"><a href="#footnote-siphash">1</a></sup>的拒绝服务（Denial of Service, DoS）攻击的抵抗能力。不过这不是目前可用的最快哈希算法，但为了更好的安全性而接受一些性能下降，是值得的权衡。如果你分析代码后发现默认哈希函数对你的用途来说太慢，就可以通过指定不同的 hasher 来切换到其他函数。<em>hasher</em> 是一种实现了 <code>BuildHasher</code> trait 的类型。<a href="ch10-02-traits.html">第十章</a>会讨论 trait 以及如何实现它们。你不一定要从零开始自己实现 hasher；<a href="https://crates.io/">crates.io</a> 上有其他 Rust 用户共享的库，它们提供了许多常见哈希算法的 hasher 实现。</p>
 <h2 id="总结"><a class="header" href="#总结">总结</a></h2>
 <p>vector、字符串和哈希 map 会在你的程序需要储存、访问和修改数据时帮助你。这里有一些你应该能够解决的练习问题：</p>
 <ol>
@@ -287,7 +298,11 @@ Blue: 10
 <p>标准库 API 文档中描述的这些类型的方法将有助于你进行这些练习！</p>
 <p>我们已经开始接触可能会有失败操作的复杂程序了，这也意味着接下来是一个了解错误处理的绝佳时机！接下来我们将讨论这一部分！</p>
 <div class="quiz-placeholder" data-quiz-name="&quot;ch08-03-hashmap&quot;" data-quiz-questions="{&quot;questions&quot;:[{&quot;context&quot;:&quot;在不可变引用（`v1`）仍然有效期间，不能对 `h` 进行修改（`h.insert(\&quot;k2\&quot;, 1)`）。\n&quot;,&quot;id&quot;:&quot;f76aba3c-2e95-428a-9366-93b03264a8b6&quot;,&quot;type&quot;:&quot;Tracing&quot;,&quot;answer&quot;:{&quot;doesCompile&quot;:false,&quot;lineNumber&quot;:6},&quot;prompt&quot;:{&quot;program&quot;:&quot;use std::collections::HashMap;\nfn main() {\n  let mut h = HashMap::new();\n  h.insert(\&quot;k1\&quot;, 0);\n  let v1 = &amp;h[\&quot;k1\&quot;];\n  h.insert(\&quot;k2\&quot;, 1);\n  let v2 = &amp;h[\&quot;k2\&quot;];\n  println!(\&quot;{} {}\&quot;, v1, v2);\n}\n&quot;}},{&quot;context&quot;:&quot;该程序将给定字母每次出现的索引存储为向量，并存入哈希映射中。\n然后对字母 'l' 的所有索引求和，字母 'l' 在字符串 `\&quot;hello!\&quot;` 中出现在索引 2 和 3 处。\n&quot;,&quot;id&quot;:&quot;6028c7f5-b373-475f-ba43-553773c7b3b7&quot;,&quot;type&quot;:&quot;Tracing&quot;,&quot;answer&quot;:{&quot;doesCompile&quot;:true,&quot;stdout&quot;:&quot;5&quot;},&quot;prompt&quot;:{&quot;program&quot;:&quot;use std::collections::HashMap;\nfn main() {\n  let mut h: HashMap&lt;char, Vec&lt;usize&gt;&gt; = HashMap::new();\n  for (i, c) in \&quot;hello!\&quot;.chars().enumerate() {\n    h.entry(c).or_insert(Vec::new()).push(i);\n  }\n  let mut sum = 0;\n  for i in h.get(&amp;'l').unwrap() {\n    sum += *i;\n  }\n  println!(\&quot;{}\&quot;, sum);\n}\n&quot;}}]}" data-quiz-fullscreen="true" data-quiz-cache-answers="true"></div>
-<script type="text/javascript" src="quiz/quiz-embed.iife.js"></script><link rel="stylesheet" type="text/css" href="quiz/style.css">
+<script type="text/javascript" src="quiz/quiz-embed.iife.js"></script><link rel="stylesheet" type="text/css" href="quiz/style.css"><hr>
+<ol class="footnote-definition"><li id="footnote-siphash">
+<p><a href="https://en.wikipedia.org/wiki/SipHash">https://en.wikipedia.org/wiki/SipHash</a> <a href="#fr-siphash-1">↩</a></p>
+</li>
+</ol>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
