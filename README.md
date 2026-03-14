@@ -16,6 +16,8 @@
 
 目标是提供一个适合公开部署的中文版 Rust Book + Quiz 仓库。
 
+建议 GitHub 仓库名使用 `rust-book-quiz-zh`。
+
 ## 本地运行
 
 安装依赖：

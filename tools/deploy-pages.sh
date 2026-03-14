@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BOOK_DIR="${CF_PAGES_BOOK_DIR:-$ROOT_DIR/book}"
 PROJECT_NAME="${CF_PAGES_PROJECT_NAME:-rust-book-quiz-zh}"
 BRANCH_NAME="${CF_PAGES_BRANCH:-main}"
-LOG_PATH="${WRANGLER_LOG_PATH:-${TMPDIR:-/tmp}/rust-book-quiz-wrangler.log}"
+LOG_PATH="${WRANGLER_LOG_PATH:-${TMPDIR:-/tmp}/rust-book-quiz-zh-wrangler.log}"
 COMMAND="${1:-deploy}"
 
 usage() {
@@ -21,7 +21,7 @@ usage() {
   CF_PAGES_PROJECT_NAME   Pages 项目名，默认: rust-book-quiz-zh
   CF_PAGES_BOOK_DIR       要发布的目录，默认: $ROOT_DIR/book
   CF_PAGES_BRANCH         绑定的 Pages 分支名，默认: main
-  WRANGLER_LOG_PATH       Wrangler 日志文件路径，默认: ${TMPDIR:-/tmp}/rust-book-quiz-wrangler.log
+  WRANGLER_LOG_PATH       Wrangler 日志文件路径，默认: ${TMPDIR:-/tmp}/rust-book-quiz-zh-wrangler.log
   CF_PAGES_NO_PROXY=1     发布时临时移除代理环境变量
 EOF
 }
