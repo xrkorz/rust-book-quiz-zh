@@ -25,6 +25,7 @@ ArgumentV
 associativity
 async
 atomics
+AtomicI32
 attr
 autocompletion
 AveragedCollection
@@ -151,6 +152,7 @@ durations
 ebook
 ebooks
 Edsger
+ETAPS
 egular
 ElementRef
 else's
@@ -238,6 +240,7 @@ IEEE
 impl
 implementor
 implementors
+Implementers
 ImportantExcerpt
 incrementing
 IndexMut
@@ -446,6 +449,7 @@ ripgrep
 runnable
 runtime
 runtimes
+Rumbul
 Rustacean
 Rustaceans
 rUsT
